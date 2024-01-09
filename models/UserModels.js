@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema({
   hovaten:{type:String},
   date:{type:String},
   yearsold:{type:String},
+  role: { type: String, enum: ['admin','user'], default: 'admin' },
   address:{
     wards:{type:String},
     districts:{type:String},

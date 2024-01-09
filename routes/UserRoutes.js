@@ -6,11 +6,11 @@ const multer = require('multer')
 
 const storage = multer.memoryStorage();
 
-
+const upload = multer({ storage: storage });
 
 router.post('/register', async (req, res) => {
     try {
-      const { username, password, phone, hovaten, date, phuongdiachi,quandiachi,thanhphodiachi,phuongque,quanque,thanhphoque,job} = req.body;
+      const { username, password, phone, hovaten, date, phuongdiachi,quandiachi,thanhphodiachi,phuongque,quanque,thanhphoque,job,role} = req.body;
   
       
       if (!phone || !/^\d{10}$/.test(phone)) {
@@ -35,6 +35,7 @@ router.post('/register', async (req, res) => {
         username, 
         password: hashedPassword, 
         phone,
+        role,
         address: {
             wards: phuongdiachi,
             districts: quandiachi,
@@ -66,7 +67,8 @@ router.post('/register', async (req, res) => {
               phone: user.phone,
               address:user.address,
               hometown:user.hometown,
-              job:user.job
+              job:user.job,
+              role:user.role
             },
           ],
         },
@@ -108,7 +110,8 @@ router.post('/register', async (req, res) => {
                 phone: user.phone,
                 address:user.address,
                 hometown:user.hometown,
-                job:user.job
+                job:user.job,
+                role:user.role
             },
           ],
         },
