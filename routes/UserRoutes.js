@@ -2,7 +2,7 @@ const router = require("express").Router();
 const User = require('../models/UserModels');
 const bcrypt = require("bcryptjs");
 const jwt = require('jsonwebtoken');
-const multer = require('multer')
+const multer = require('multer');
 
 const storage = multer.memoryStorage();
 
@@ -117,4 +117,5 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ message: 'Đã xảy ra lỗi.' });
   }
 });
+
 module.exports = router
