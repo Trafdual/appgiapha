@@ -1,34 +1,26 @@
 const mongoose = require('mongoose');
 
 const usergiaphaSchema = new mongoose.Schema({
- name:{type:String},
- nickname:{type:String},
- sex:{type:String},
- date:{type:String},
- maritalstatus:{type:String},
- phone:{type:String},
- academiclevel:{type:String},
- job:{type:String},
- address:{
-  wards:{type:String},
-  districts:{type:String},
-  city:{type:String}
-},
-hometown:{
-  wards:{type:String},
-  districts:{type:String},
-  city:{type:String}
-},
-bio:{type:String},
-dead:{type:Boolean},
-deadinfo:{
-  deaddate:{type:String},
-  lived:{type:Number},
-  worshipaddress:{type:String},
-  worshipperson:{type:String},
-  burialaddress:{type:String}
-},
-lineage: { type: mongoose.Schema.Types.ObjectId, ref: 'dongho' }
+  name: { type: String },
+  nickname: { type: String },
+  sex: { type: String },
+  date: { type: String },
+  maritalstatus: { type: String },
+  phone: { type: String },
+  academiclevel: { type: String },
+  job: { type: String },
+  address: { type: String },
+  hometown: { type: String },
+  bio: { type: String },
+  dead: { type: Boolean },
+  deadinfo: {
+    deaddate: { type: String },
+    lived: { type: Number },
+    worshipaddress: { type: String },
+    worshipperson: { type: String },
+    burialaddress: { type: String }
+  },
+  lineage: { type: mongoose.Schema.Types.ObjectId, ref: 'dongho' }
 });
 
 const UserGiaPha = mongoose.model('usergiapha', usergiaphaSchema);

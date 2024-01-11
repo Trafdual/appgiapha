@@ -8,16 +8,8 @@ const userSchema = new mongoose.Schema({
   date: { type: String },
   yearsold: { type: String },
   role: { type: String, enum: ['admin', 'user'], default: 'admin' },
-  address: {
-    wards: { type: String },
-    districts: { type: String },
-    city: { type: String }
-  },
-  hometown: {
-    wards: { type: String },
-    districts: { type: String },
-    city: { type: String }
-  },
+  address: { type: String },
+  hometown: { type: String },
   avatar: { type: String },
   phone: { type: String },
   job: { type: String }

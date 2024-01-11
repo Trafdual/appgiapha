@@ -27,6 +27,7 @@ const mongoStoreOptions = {
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
 app.use(session({
   secret: 'mysecretkey',
   resave: false,
