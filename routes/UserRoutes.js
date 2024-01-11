@@ -97,6 +97,7 @@ router.post('/login', async (req, res) => {
             username: user.username,
             password: user.password,
             hovaten: user.hovaten,
+            avatar: user.avatar,
             namsinh: user.date,
             tuoi: user.yearsold,
             phone: user.phone,
@@ -190,6 +191,98 @@ router.delete('/deleteUser/:idUser', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Đã xảy ra lỗi.' });
+  }
+});
+
+router.get('/users', async (req, res) => {
+  try {
+    const users = await User.find({}, { password: 0 });
+
+    const responseData = {
+      success: true,
+      data: {
+        users: users.map(user => ({
+          _id: user._id,
+          username: user.username,
+          hovaten: user.hovaten,
+          avatar: user.avatar,
+          namsinh: user.date,
+          tuoi: user.yearsold,
+          phone: user.phone,
+          address: user.address,
+          hometown: user.hometown,
+          job: user.job,
+          role: user.role
+        })),
+      },
+    };
+
+    res.status(200).json(responseData);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Đã xảy ra lỗi.' });
+  }
+});
+
+router.get('/user/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const user = await User.findById(userId, { password: 0 });
+    if (!user) {
+      return res.status(404).json({ message: 'Người dùng không tồn tại.' });
+    }
+
+    const responseData = {
+      success: true,
+      data: {
+        user: {
+          _id: user._id,
+          username: user.username,
+          hovaten: user.hovaten,
+          avatar: user.avatar,
+          namsinh: user.date,
+          tuoi: user.yearsold,
+          phone: user.phone,
+          address: user.address,
+          hometown: user.hometown,
+          job: user.job,
+          role: user.role
+        },
+      },
+    };
+
+    res.status(200).json(responseData);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Đã xảy ra lỗi.' });
+  }
+});
+router.post('/doiavatar/:userId', upload.single('avatar'), async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    if (!/^[0-9a-fA-F]{24}$/.test(userId)) {
+      return res.status(400).json({ message: 'ID người dùng không hợp lệ.' });
+    }
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'Không tìm thấy người dùng.' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ message: 'Vui lòng chọn một file ảnh.' });
+    }
+
+    const avatar = req.file.buffer.toString('base64');
+    user.avatar = avatar;
+    await user.save();
+    // Cập nhật avatar cho tất cả người dùng có cùng _id
+    await User.updateMany({ _id: userId }, { avatar });
+
+    return res.status(200).json({ message: 'Đổi avatar thành công.' });
+  } catch (error) {
+    console.error('Lỗi khi đổi avatar:', error);
+    res.status(500).json({ error: 'Đã xảy ra lỗi khi đổi avatar.' });
   }
 });
 
