@@ -126,9 +126,11 @@ router.post('/addMember/:iddongho', async (req, res) => {
     if (!parent) {
       return res.status(404).json({ error: 'Parent not found' });
     }
-    const user=await User.findById(userId);
-    if(!user){
-      return res.status(404).json({ error: 'User not found' });
+    if (userId) {
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'Người dùng không tồn tại' });
+      }
     }
 
     const newMember = new UserGiaPha({name,userId});
