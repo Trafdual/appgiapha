@@ -149,11 +149,12 @@ router.post('/addMember/:iddongho', async (req, res) => {
 
 router.post('/postdongho',async(req,res)=>{
   try {
-    const{name,key}=req.body
+    const{name,key,address}=req.body
     const hashkey = await bcrypt.hash(key, 10);
     const dongho = new DongHo({
       name,
-      key:hashkey
+      key:hashkey,
+      address
     });
     await dongho.save();
     res.json(dongho)
