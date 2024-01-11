@@ -5,6 +5,7 @@ const User = require('../models/UserModels');
 const momenttimezone = require('moment-timezone');
 const multer = require('multer');
 const NotificationBaiviet = require('../models/NotifyBaiVietModel')
+const moment = require('moment');
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
@@ -117,19 +118,27 @@ router.put('/updatebaiviet/:postId', upload.array('images', 10), async (req, res
 });
 
 
-// API lấy danh sách bài viết
 router.get('/getbaiviet/:userId', async (req, res) => {
   try {
     const userId = req.params.userId;
 
+    // Lấy thông tin người dùng từ cơ sở dữ liệu
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'Không tìm thấy người dùng' });
+    }
     let query = {};
 
     // Nếu có userId được cung cấp, chỉ lấy bài viết của người dùng đó
     if (userId) {
       query.userId = userId;
     }
-
     const posts = await Baiviet.find(query).populate('userId', 'username avatar');
+
+    // Kiểm tra và cập nhật trạng thái isLiked
+    posts.forEach(post => {
+      post.isLiked = user.favoriteBaiviet.some(item => item.baivietId.toString() === post._id.toString() && item.isLiked === true);
+    });
 
     return res.status(200).json({ success: true, posts });
   } catch (error) {
@@ -137,7 +146,6 @@ router.get('/getbaiviet/:userId', async (req, res) => {
     return res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 });
-
 
 // LIKE bài viết 
 router.post('/addfavoritebaiviet/:userId/:baivietId', async (req, res) => {
@@ -191,8 +199,8 @@ router.post('/addfavoritebaiviet/:userId/:baivietId', async (req, res) => {
 // thông báo
 router.get('/notifybaiviet/:userId', async (req, res) => {
   try {
-    const userID = req.params.userId
-    const notify = await NotificationBaiviet.find({ userId: userID }).sort({ date: -1 }).lean()
+    const userID = req.params.userId;
+    const notify = await NotificationBaiviet.find({ userId: userID }).sort({ date: -1 }).lean();
     const formatnotify = notify.map((item) => {
       const formattedDate = moment(item.date).format('DD/MM/YYYY HH:mm:ss');
       return {
@@ -202,12 +210,13 @@ router.get('/notifybaiviet/:userId', async (req, res) => {
         userId: item.userId,
         date: formattedDate,
         baivietId: item.baivietId
-      }
-    })
-    res.json(formatnotify)
+      };
+    });
+    res.json(formatnotify);
   } catch (error) {
-    console.error('Lỗi khi tìm thông báo:', err);
+    console.error('Lỗi khi tìm thông báo:', error);
     res.status(500).json({ error: 'Đã xảy ra lỗi khi tìm thông báo.' });
   }
-})
+});
+
 module.exports = router;
