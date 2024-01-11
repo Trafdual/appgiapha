@@ -120,7 +120,8 @@ router.get('/getmember', async (req, res) => {
 router.post('/addMember/:iddongho', async (req, res) => {
   try {
     const iddongho=req.params.iddongho;
-    const { name,userId } = req.body;
+    const { name } = req.body;
+    let userId = req.body.userId;
 
     const parent = await DongHo.findById(iddongho);
     if (!parent) {
