@@ -13,7 +13,12 @@ const userSchema = new mongoose.Schema({
   hometown: { type: String },
   avatar: { type: String },
   phone: { type: String },
-  job: { type: String }
+  job: { type: String },
+  baiviet: [{ type: mongoose.Schema.Types.ObjectId, ref: 'baiviet' }],
+  favoriteBaiviet: [{
+    baivietId: { type: mongoose.Schema.Types.ObjectId, ref: 'baiviet' },
+    isLiked: { type: Boolean, default: false },
+  }],
 });
 
 const User = mongoose.model('user', userSchema);

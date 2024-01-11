@@ -6,8 +6,9 @@ const methodOverride = require('method-override');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const MongoStore = require('connect-mongo');
-const userroute=require('./routes/UserRoutes');
-const caygiapha=require('./routes/CayGiaPharoutes')
+const userroute = require('./routes/UserRoutes');
+const caygiapha = require('./routes/CayGiaPharoutes');
+const bangtinroute = require('./routes/BaiVietBangTinRoutes');
 
 var app = express();
 app.use(methodOverride('_method'));
@@ -22,7 +23,7 @@ mongoose.connect(uri, {
 const mongoStoreOptions = {
   mongooseConnection: mongoose.connection,
   mongoUrl: uri,
-  collection: 'sessions', 
+  collection: 'sessions',
 };
 
 app.use(cookieParser());
@@ -39,9 +40,10 @@ app.use(session({
   }
 }));
 app.use(cors());
- 
-app.use('/',userroute);
-app.use('/',caygiapha);
+
+app.use('/', userroute);
+app.use('/', caygiapha);
+app.use('/', bangtinroute);
 
 app.listen(8080, () => {
   try {
