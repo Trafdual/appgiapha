@@ -120,8 +120,7 @@ router.get('/getmember', async (req, res) => {
 router.post('/addMember/:iddongho', async (req, res) => {
   try {
     const iddongho=req.params.iddongho;
-    const { name } = req.body;
-    let userId = req.body.userId;
+    const { name,userId } = req.body;
 
     const parent = await DongHo.findById(iddongho);
     if (!parent) {
@@ -132,9 +131,6 @@ router.post('/addMember/:iddongho', async (req, res) => {
       if (!user) {
         return res.status(404).json({ error: 'Người dùng không tồn tại' });
       }
-    }
-    if(!userId){
-      userId="";
     }
 
     const newMember = new UserGiaPha({name,userId});
