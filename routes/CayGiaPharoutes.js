@@ -132,6 +132,9 @@ router.post('/addMember/:iddongho', async (req, res) => {
         return res.status(404).json({ error: 'Người dùng không tồn tại' });
       }
     }
+    if(!userId){
+      userId="";
+    }
 
     const newMember = new UserGiaPha({name,userId});
     newMember.lineage = parent._id; 
