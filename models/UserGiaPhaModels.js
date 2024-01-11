@@ -16,7 +16,7 @@ const usergiaphaSchema = new mongoose.Schema({
   dead: { type: Boolean },
   deadinfo: {
     deaddate: { type: String },
-    lived: { type: Number },
+    lived: { type: String },
     worshipaddress: { type: String },
     worshipperson: { type: String },
     burialaddress: { type: String }
