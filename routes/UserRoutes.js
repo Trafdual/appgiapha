@@ -118,6 +118,7 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ message: 'Đã xảy ra lỗi.' });
   }
 });
+
 router.put('/updateUser/:idUser', async (req, res) => {
   try {
     const { hovaten, namsinh, tuoi, phone, address, hometown, job } = req.body;
@@ -257,6 +258,7 @@ router.get('/user/:userId', async (req, res) => {
     res.status(500).json({ message: 'Đã xảy ra lỗi.' });
   }
 });
+
 router.post('/doiavatar/:userId', upload.single('avatar'), async (req, res) => {
   try {
     const userId = req.params.userId;

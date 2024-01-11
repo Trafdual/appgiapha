@@ -5,6 +5,7 @@ const User = require('../models/UserModels');
 const momenttimezone = require('moment-timezone');
 const multer = require('multer');
 const NotificationBaiviet = require('../models/NotifyBaiVietModel')
+const DongHo = require("../models/DongHoModel");
 const moment = require('moment');
 
 const storage = multer.memoryStorage();
@@ -20,6 +21,11 @@ router.post('/postbaiviet/:userId', upload.array('images', 10), async (req, res)
 
     if (!user) {
       return res.status(404).json({ message: 'Không tìm thấy user' });
+    }
+    const dongho = await DongHo.findOne({ userId: { $in: [userId] } });
+
+    if (!dongho) {
+      return res.status(403).json({ message: 'bạn không thuộc dòng họ này' });
     }
 
     const vietnamTime = momenttimezone().add(7, 'hours').toDate();
