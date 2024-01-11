@@ -7,6 +7,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const MongoStore = require('connect-mongo');
 const userroute=require('./routes/UserRoutes');
+const caygiapha=require('./routes/CayGiaPharoutes')
 
 var app = express();
 app.use(methodOverride('_method'));
@@ -40,6 +41,7 @@ app.use(session({
 app.use(cors());
  
 app.use('/',userroute);
+app.use('/',caygiapha);
 
 app.listen(8080, () => {
   try {

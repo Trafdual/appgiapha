@@ -2,7 +2,7 @@ const router = require("express").Router();
 const User = require('../models/UserModels');
 const bcrypt = require("bcryptjs");
 const jwt = require('jsonwebtoken');
-const multer = require('multer')
+const multer = require('multer');
 
 const storage = multer.memoryStorage();
 
@@ -117,4 +117,80 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ message: 'Đã xảy ra lỗi.' });
   }
 });
+router.put('/updateUser/:idUser', async (req, res) => {
+  try {
+    const { hovaten, namsinh, tuoi, phone, address, hometown, job } = req.body;
+    const userId = req.params.idUser;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'Người dùng không tồn tại.' });
+    }
+
+    // Cập nhật chỉ những trường mà người dùng đã thay đổi
+    if (hovaten) user.hovaten = hovaten;
+    if (namsinh) user.date = namsinh;
+    if (tuoi) user.yearsold = tuoi;
+    if (phone) user.phone = phone;
+    if (address) user.address = address;
+    if (hometown) user.hometown = hometown;
+    if (job) user.job = job;
+
+    await user.save();
+
+    // Tạo token mới sau khi cập nhật thông tin
+    const token = jwt.sign({ userId: user._id, role: user.role }, 'mysecretkey');
+
+    // Chuẩn bị dữ liệu phản hồi
+    const responseData = {
+      success: true,
+      data: {
+        user: {
+          _id: user._id,
+          username: user.username,
+          hovaten: user.hovaten,
+          namsinh: user.date,
+          tuoi: user.yearsold,
+          phone: user.phone,
+          address: user.address,
+          hometown: user.hometown,
+          job: user.job,
+          role: user.role
+        },
+      },
+    };
+
+    responseData.token = token;
+    res.status(200).json(responseData);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Đã xảy ra lỗi.' });
+  }
+});
+
+router.delete('/deleteUser/:idUser', async (req, res) => {
+  try {
+    const userId = req.params.idUser;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'Người dùng không tồn tại.' });
+    }
+    await User.deleteOne({ _id: userId });
+
+
+    const responseData = {
+      success: true,
+      message: 'Người dùng đã được xóa thành công.'
+    };
+
+    res.status(200).json(responseData);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Đã xảy ra lỗi.' });
+  }
+});
+
 module.exports = router

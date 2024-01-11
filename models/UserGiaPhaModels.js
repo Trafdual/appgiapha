@@ -20,7 +20,8 @@ const usergiaphaSchema = new mongoose.Schema({
     worshipperson: { type: String },
     burialaddress: { type: String }
   },
-  lineage: { type: mongoose.Schema.Types.ObjectId, ref: 'dongho' }
+  lineage: { type: mongoose.Schema.Types.ObjectId, ref: 'dongho' },
+  con:[{type: mongoose.Schema.Types.ObjectId, ref: 'usergiapha' }]
 });
 
 const UserGiaPha = mongoose.model('usergiapha', usergiaphaSchema);
