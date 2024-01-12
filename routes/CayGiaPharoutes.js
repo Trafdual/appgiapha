@@ -74,14 +74,22 @@ const buildFamilyTree = async (donghoId, memberId) => {
 // làm thêm cây gia phả truyền iduser qua param dành cho admin (nhiệm vụ ngày mai)
 //post dòng họ thêm iduser vào để thêm ngược lại id dòng họ vào user
 
-router.get('/familyTree', async (req, res) => {
+router.get('/familyTree/:donghoId', async (req, res) => {
   try {
+    const donghoId=req.params.donghoId;
+
+    const dongho=await DongHo.findById(donghoId);
     const { key } = req.body;
     if (!key) {
       return res.status(404).json({ message: 'bạn chưa nhập key' })
     }
-   let memberId=null
-    const familyTreeJSON = await buildFamilyTree(key,memberId);
+
+    if(key!=dongho.key){
+      return res.status(404).json({ message: 'bạn nhập sai key' })
+    }
+
+    let memberId=null
+    const familyTreeJSON = await buildFamilyTree(donghoId,memberId);
     res.json(familyTreeJSON)
   } catch (error) {
     console.error(error)
@@ -290,14 +298,14 @@ router.post('/postdongho/:userId', async (req, res) => {
   try {
     const userId = req.params.userId;
     const user=await User.findById(userId);
-    const { name, address } = req.body
+    const { name, address,key } = req.body
     const dongho = new DongHo({
       name,
-      address
+      address,
+      key
     })
     user.lineage=dongho._id
     user.role='admin';
-    dongho.key = dongho._id;
     await dongho.save()
     await user.save();
     res.json(dongho)
