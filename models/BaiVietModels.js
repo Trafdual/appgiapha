@@ -5,6 +5,7 @@ const baivietSchema = new mongoose.Schema({
     content: String,
     like: Number,
     isLiked: { type: Boolean, default: false },
+    numberComment: Number,
     comment: [{
         userID: { type: mongoose.Schema.Types.ObjectId, ref: 'user' },
         cmt: { type: String },

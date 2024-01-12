@@ -5,6 +5,7 @@ const User = require('../models/UserModels');
 const momenttimezone = require('moment-timezone');
 const multer = require('multer');
 const NotificationBaiviet = require('../models/NotifyBaiVietModel')
+const DongHo = require("../models/DongHoModel");
 const moment = require('moment');
 
 const storage = multer.memoryStorage();
@@ -21,10 +22,15 @@ router.post('/postbaiviet/:userId', upload.array('images', 10), async (req, res)
     if (!user) {
       return res.status(404).json({ message: 'Không tìm thấy user' });
     }
+    // const dongho = await DongHo.findOne({ userId: { $in: [userId] } });
+
+    // if (!dongho) {
+    //   return res.status(403).json({ message: 'bạn không thuộc dòng họ này' });
+    // }
 
     const vietnamTime = momenttimezone().add(7, 'hours').toDate();
 
-    const baiviet = new Baiviet({ userId, content, like: 0, images: [], date: vietnamTime });
+    const baiviet = new Baiviet({ userId, content, like: 0, numberComment: 0, images: [], date: vietnamTime });
 
     if (req.files) {
       const images = req.files.map((file) => file.buffer.toString('base64'));
@@ -50,8 +56,9 @@ router.post('/postbaiviet/:userId', upload.array('images', 10), async (req, res)
   }
 });
 
-router.delete('/deletebaiviet/:postId', async (req, res) => {
+router.delete('/deletebaiviet/:userId/:postId', async (req, res) => {
   try {
+    const userId = req.params.userId;
     const postId = req.params.postId;
 
     const baiviet = await Baiviet.findById(postId);
@@ -60,10 +67,10 @@ router.delete('/deletebaiviet/:postId', async (req, res) => {
       return res.status(404).json({ message: 'Không tìm thấy bài viết' });
     }
 
-    // Kiểm tra quyền xóa bài viết, ví dụ chỉ cho phép người tạo bài xóa
-    // if (baiviet.userId.toString() !== req.session.userId) {
-    //   return res.status(403).json({ message: 'Bạn không có quyền xóa bài viết này' });
-    // }
+    // Kiểm tra quyền xóa bài viết, chỉ cho phép người tạo bài xóa
+    if (baiviet.userId.toString() !== userId) {
+      return res.status(403).json({ message: 'Bạn không có quyền xóa bài viết này' });
+    }
 
     await Baiviet.deleteOne({ _id: postId });
 
@@ -73,6 +80,7 @@ router.delete('/deletebaiviet/:postId', async (req, res) => {
     res.status(500).json({ error: 'Đã xảy ra lỗi khi xóa bài viết.' });
   }
 });
+
 
 // API sửa bài viết
 router.put('/updatebaiviet/:postId', upload.array('images', 10), async (req, res) => {
@@ -217,5 +225,179 @@ router.get('/notifybaiviet/:userId', async (req, res) => {
     res.status(500).json({ error: 'Đã xảy ra lỗi khi tìm thông báo.' });
   }
 });
+router.post('/postcmtbaiviet/:baivietId/:userId', async (req, res) => {
+  try {
+    const baivietId = req.params.baivietId;
+    const userId = req.params.userId;
+    const { comment } = req.body;
+    const vietnamTime = momenttimezone().add(7, 'hours').toDate();
+    const user = await User.findById(userId);
+
+    if (!user) {
+      res.status(403).json({ message: 'Không tìm thấy người dùng' });
+    }
+
+    const baiviet = await Baiviet.findById(baivietId);
+
+    if (!baiviet) {
+      res.status(404).json({ message: 'Không tìm thấy bài viết' });
+    }
+
+    const newComment = {
+      userID: userId,
+      cmt: comment,
+      date: vietnamTime
+    };
+
+    baiviet.comment.push(newComment);
+    baiviet.numberComment += 1;
+    await baiviet.save();
+
+    if (baiviet.userId.toString() !== userId) {
+      const notificationContentForPostOwner = `${user.username} đã bình luận bài viết:${baiviet.content} của bạn`;
+      const notificationForPostOwner = new NotificationBaiviet({
+        title: 'Bài viết có bình luận mới',
+        content: notificationContentForPostOwner,
+        userId: baiviet.userId,
+        baivietId: baivietId,
+        date: vietnamTime,
+        isRead: true
+      });
+      await notificationForPostOwner.save();
+    }
+
+    res.status(200).json({ message: 'Đã thêm bình luận thành công' });
+  } catch (error) {
+    console.error('Lỗi khi post bình luận:', error);
+    res.status(500).json({ error: 'Đã xảy ra lỗi khi post bình luận.' });
+  }
+});
+router.get('/getcmtbaiviet/:baivietId', async (req, res) => {
+  try {
+    const baivietId = req.params.baivietId;
+    const baiviet = await Baiviet.findById(baivietId).lean();
+
+    if (!baiviet) {
+      return res.status(404).json({ message: 'Bài viết không tồn tại' });
+    }
+
+    // Tạo một đối tượng để lưu trữ thông tin role và avatar của mỗi người dùng
+    const userRoles = {};
+
+    // Lấy thông tin về người dùng từ danh sách comment
+    const userIdsInComments = [...new Set(baiviet.comment.map(item => item.userID.toString()))];
+    await Promise.all(
+      userIdsInComments.map(async (userId) => {
+        if (!userRoles[userId]) {
+          const userInfo = await User.findById(userId).select('username role avatar');
+          userRoles[userId] = {
+            userId,
+            username: userInfo.username,
+            role: userInfo.role,
+            avatar: userInfo.avatar || '',
+          };
+        }
+      })
+    );
+
+    // Tạo danh sách comment với thông tin về người dùng
+    const comments = await Promise.all(
+      baiviet.comment.map(async (item) => {
+        const usercmt = userRoles[item.userID.toString()];
+        const formatdatecmt = moment(item.date).format('DD/MM/YYYY HH:mm:ss');
+
+        return {
+          _id: item._id,
+          userId: item.userID,
+          cmt: item.cmt,
+          username: usercmt ? usercmt.username : '',
+          avatar: usercmt ? usercmt.avatar : '',
+          role: usercmt ? usercmt.role : '',
+          date: formatdatecmt,
+        };
+      })
+    );
+
+    res.json(comments);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Đã xảy ra lỗi khi lấy bình luận bài viết' });
+  }
+});
+router.put('/updatecmtbaiviet/:baivietId/:commentId', async (req, res) => {
+  try {
+    const baivietId = req.params.baivietId;
+    const commentId = req.params.commentId;
+    const { cmt } = req.body;
+
+    const baiviet = await Baiviet.findById(baivietId);
+
+    if (!baiviet) {
+      return res.status(404).json({ message: 'Bài viết không tồn tại' });
+    }
+
+    const comment = baiviet.comment.id(commentId);
+
+    if (!comment) {
+      return res.status(404).json({ message: 'Bình luận không tồn tại' });
+    }
+
+    comment.cmt = cmt;
+    await baiviet.save();
+
+    res.json({ message: 'Sửa bình luận thành công' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Đã xảy ra lỗi khi sửa bình luận' });
+  }
+});
+router.delete('/deletecmtbaiviet/:baivietId/:commentId/:userId', async (req, res) => {
+  try {
+    const baivietId = req.params.baivietId;
+    const commentId = req.params.commentId;
+    const userId = req.params.userId;
+
+    const baiviet = await Baiviet.findById(baivietId);
+
+    if (!baiviet) {
+      return res.status(404).json({ message: 'Bài viết không tồn tại' });
+    }
+
+    // Tìm index của comment trong mảng
+    const commentIndex = baiviet.comment.findIndex((item) => item._id.toString() === commentId);
+
+    // Kiểm tra nếu không tìm thấy comment
+    if (commentIndex === -1) {
+      return res.status(404).json({ message: 'Bình luận không tồn tại' });
+    }
+
+    // Kiểm tra xem người gửi yêu cầu có phải là người tạo comment không
+    if (baiviet.comment[commentIndex].userID.toString() !== userId) {
+      return res.status(403).json({ message: 'Bạn không có quyền xóa bình luận này' });
+    }
+
+    // Lấy số lượng bình luận trước khi xóa
+    const commentCountBefore = baiviet.comment.length;
+
+    // Sử dụng splice để xóa comment theo index
+    baiviet.comment.splice(commentIndex, 1);
+
+    // Lấy số lượng bình luận sau khi xóa
+    const commentCountAfter = baiviet.comment.length;
+
+    // Nếu có sự giảm số lượng bình luận, giảm giá trị numberComment và cập nhật lại bài viết
+    if (commentCountAfter < commentCountBefore) {
+      baiviet.numberComment -= 1;
+      await baiviet.save();
+      res.json({ message: 'Xóa bình luận thành công', commentCount: commentCountAfter });
+    } else {
+      res.json({ message: 'Xóa bình luận không thành công', commentCount: commentCountBefore });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Đã xảy ra lỗi khi xóa bình luận' });
+  }
+});
+
 
 module.exports = router;

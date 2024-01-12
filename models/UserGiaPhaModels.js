@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const usergiaphaSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'user' },
   name: { type: String },
   nickname: { type: String },
   sex: { type: String },
@@ -15,7 +16,7 @@ const usergiaphaSchema = new mongoose.Schema({
   dead: { type: Boolean },
   deadinfo: {
     deaddate: { type: String },
-    lived: { type: Number },
+    lived: { type: String },
     worshipaddress: { type: String },
     worshipperson: { type: String },
     burialaddress: { type: String }
