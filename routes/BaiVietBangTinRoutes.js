@@ -5,6 +5,8 @@ const User = require('../models/UserModels');
 const momenttimezone = require('moment-timezone');
 const multer = require('multer');
 const NotificationBaiviet = require('../models/NotifyBaiVietModel')
+const UserGiaPha = require('../models/UserGiaPhaModels')
+
 const DongHo = require("../models/DongHoModel");
 const moment = require('moment');
 
@@ -22,11 +24,7 @@ router.post('/postbaiviet/:userId', upload.array('images', 10), async (req, res)
     if (!user) {
       return res.status(404).json({ message: 'Không tìm thấy user' });
     }
-    const dongho = await DongHo.findOne({ userId: { $in: [userId] } });
-
-    if (!dongho) {
-      return res.status(403).json({ message: 'bạn không thuộc dòng họ này' });
-    }
+    const dongho=await DongHo.findById(user.lineage._id);
 
     const vietnamTime = momenttimezone().add(7, 'hours').toDate();
 
@@ -41,8 +39,9 @@ router.post('/postbaiviet/:userId', upload.array('images', 10), async (req, res)
 
       baiviet.images = images;
     }
-
+    dongho.baiviet.push(baiviet._id);
     await baiviet.save();
+    await dongho.save();
     if (!user.baiviet) {
       user.baiviet = [];
     }
@@ -123,6 +122,47 @@ router.put('/updatebaiviet/:postId', upload.array('images', 10), async (req, res
   }
 });
 
+router.get('/getbaivietdongho/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'Không tìm thấy người dùng' });
+    }
+    const dongho = await DongHo.findById(user.lineage._id);
+
+    const posts = await Baiviet.find().populate('userId', 'username avatar');
+    let donghodata = [];
+
+    posts.forEach(baiviet => {
+      const formatdate = moment(baiviet.date).format('DD/MM/YYYY HH:mm:ss');
+      const isLiked = user.favoriteBaiviet.some(favorite => favorite.baivietId.toString() === baiviet._id.toString());
+      const isBaivietInDongho = dongho.baiviet.some(dhBaiviet => dhBaiviet.toString() === baiviet._id.toString());
+
+      if (isBaivietInDongho) {
+        donghodata.push({
+          _id: baiviet._id,
+          userId: baiviet.userId._id,
+          username: user.username,
+          role: user.role,
+          avatar: user.avatar || '',
+          content: baiviet.content,
+          like: baiviet.like,
+          isLiked: isLiked,
+          date: formatdate,
+          images: baiviet.images
+        });
+      }
+    });
+
+
+    return res.status(200).json({ success: true, donghodata });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+});
 
 router.get('/getbaiviet/:userId', async (req, res) => {
   try {

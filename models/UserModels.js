@@ -14,6 +14,7 @@ const userSchema = new mongoose.Schema({
   avatar: { type: String },
   phone: { type: String },
   job: { type: String },
+  lineage: { type: mongoose.Schema.Types.ObjectId, ref: 'dongho' },
   baiviet: [{ type: mongoose.Schema.Types.ObjectId, ref: 'baiviet' }],
   favoriteBaiviet: [{
     baivietId: { type: mongoose.Schema.Types.ObjectId, ref: 'baiviet' },

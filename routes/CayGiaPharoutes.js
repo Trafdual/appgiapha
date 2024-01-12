@@ -16,7 +16,6 @@ const buildFamilyTree = async (donghoId, memberId) => {
 
     const dongho = await DongHo.findById(donghoId);
     const firstUserId = dongho.user.length > 0 ? dongho.user[0]._id : null;
-    // Đổi điều kiện từ if (memberId) sang if (!memberId)
     if (!memberId) {
       member = await UserGiaPha.findById(firstUserId);
       console.log(member);
@@ -72,6 +71,8 @@ const buildFamilyTree = async (donghoId, memberId) => {
     )
   }
 }
+// làm thêm cây gia phả truyền iduser qua param dành cho admin (nhiệm vụ ngày mai)
+//post dòng họ thêm iduser vào để thêm ngược lại id dòng họ vào user
 
 router.get('/familyTree', async (req, res) => {
   try {
@@ -116,13 +117,6 @@ router.post('/addcon/:idcha', async (req, res) => {
       return res.status(404).json({ error: 'Parent not found' })
     }
 
-    if (userId) {
-      const user = await User.findById(userId)
-      if (!user) {
-        return res.status(404).json({ error: 'Người dùng không tồn tại' })
-      }
-    }
-
     const deaddateMoment = moment(deaddate, 'DD/MM/YYYY');
     const dateMoment = moment(date, 'DD/MM/YYYY');
     const lived = deaddateMoment.diff(dateMoment, 'years');
@@ -151,6 +145,15 @@ router.post('/addcon/:idcha', async (req, res) => {
       newMemberData.phone = phone;
     }
 
+    if (userId) {
+      const user = await User.findById(userId)
+      if (!user) {
+        return res.status(404).json({ error: 'Người dùng không tồn tại' })
+      }
+      newMemberData.userId = userId;
+      dongho.userId.push(userId)
+    }
+
     const newMember = new UserGiaPha(newMemberData);
 
     if (newMember.dead == false) {
@@ -164,7 +167,7 @@ router.post('/addcon/:idcha', async (req, res) => {
     cha.con.push(newMember._id)
 
     dongho.user.push(newMember._id)
-    dongho.userId.push(userId)
+  
 
     await newMember.save()
     await dongho.save()
@@ -225,12 +228,7 @@ router.post('/addMember/:iddongho', async (req, res) => {
     if (!parent) {
       return res.status(404).json({ error: 'Parent not found' })
     }
-    if (userId) {
-      const user = await User.findById(userId)
-      if (!user) {
-        return res.status(404).json({ error: 'Người dùng không tồn tại' })
-      }
-    }
+    
 
     const deaddateMoment = moment(deaddate, 'DD/MM/YYYY');
     const dateMoment = moment(date, 'DD/MM/YYYY');
@@ -238,7 +236,6 @@ router.post('/addMember/:iddongho', async (req, res) => {
 
     const newMemberData = {
       name,
-      userId,
       nickname,
       sex,
       date,
@@ -258,6 +255,15 @@ router.post('/addMember/:iddongho', async (req, res) => {
       newMemberData.phone = phone;
     }
 
+    if (userId) {
+      const user = await User.findById(userId)
+      if (!user) {
+        return res.status(404).json({ error: 'Người dùng không tồn tại' })
+      }
+      newMemberData.userId = userId;
+      parent.userId.push(userId)
+    }
+
     const newMember = new UserGiaPha(newMemberData);
 
     if (newMember.dead == false) {
@@ -269,7 +275,6 @@ router.post('/addMember/:iddongho', async (req, res) => {
     newMember.lineage = parent._id
 
     parent.user.push(newMember._id)
-    parent.userId.push(userId)
 
     await newMember.save()
     await parent.save()
@@ -281,15 +286,19 @@ router.post('/addMember/:iddongho', async (req, res) => {
   }
 })
 
-router.post('/postdongho', async (req, res) => {
+router.post('/postdongho/:userId', async (req, res) => {
   try {
+    const userId = req.params.userId;
+    const user=await User.findById(userId);
     const { name, address } = req.body
     const dongho = new DongHo({
       name,
       address
     })
+    user.lineage=dongho._id
     dongho.key = dongho._id;
     await dongho.save()
+    await user.save();
     res.json(dongho)
   } catch (error) {
     console.error(error)
