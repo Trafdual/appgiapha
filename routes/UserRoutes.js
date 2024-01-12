@@ -3,6 +3,7 @@ const User = require('../models/UserModels');
 const bcrypt = require("bcryptjs");
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
+const moment = require('moment');
 
 const storage = multer.memoryStorage();
 
@@ -28,8 +29,10 @@ router.post('/register', async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const currentDate = new Date();
-    const birthDate = new Date(date);
-    const yearsold = currentDate.getFullYear() - birthDate.getFullYear();
+   
+    const currentdateMoment = moment(currentDate, 'DD/MM/YYYY');
+    const dateMoment = moment(date, 'DD/MM/YYYY');
+    const yearsold = currentdateMoment.diff(dateMoment, 'years');
 
     const user = new User({
       username,

@@ -308,7 +308,18 @@ router.post('/postdongho/:userId', async (req, res) => {
     user.role='admin';
     await dongho.save()
     await user.save();
-    res.json(dongho)
+    const resdata={
+      namedongho:dongho.name,
+      addressdongho:dongho.address,
+      key:dongho.key,
+      username:user.username,
+      hovaten:user.hovaten,
+      address:user.address,
+      hometown:user.hometown,
+      phone:user.phone,
+      role:user.role
+    }
+    res.json(resdata);
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Internal Server Error' })

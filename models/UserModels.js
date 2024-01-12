@@ -11,7 +11,6 @@ const userSchema = new mongoose.Schema({
   role: { type: String, enum: ['admin', 'user'], default: 'user' },
   address: { type: String },
   hometown: { type: String },
-  avatar: { type: String },
   phone: { type: String },
   job: { type: String },
   lineage: { type: mongoose.Schema.Types.ObjectId, ref: 'dongho' },
