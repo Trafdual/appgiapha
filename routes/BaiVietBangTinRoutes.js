@@ -28,7 +28,6 @@ router.post('/postbaiviet/:userId', upload.array('images', 10), async (req, res)
 
     if (req.files) {
       const images = req.files.map((file) => file.buffer.toString('base64'));
-
       if (images.length > 2) {
         return res.status(400).json({ message: 'Chỉ được phép tải lên tối đa 2 ảnh.' });
       }
