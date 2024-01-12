@@ -309,6 +309,7 @@ router.post('/postdongho/:userId', async (req, res) => {
     await dongho.save()
     await user.save();
     const resdata={
+      iddongho:dongho._id,
       namedongho:dongho.name,
       addressdongho:dongho.address,
       key:dongho.key,
