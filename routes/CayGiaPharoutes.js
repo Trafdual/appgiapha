@@ -296,6 +296,7 @@ router.post('/postdongho/:userId', async (req, res) => {
       address
     })
     user.lineage=dongho._id
+    user.role='admin';
     dongho.key = dongho._id;
     await dongho.save()
     await user.save();
