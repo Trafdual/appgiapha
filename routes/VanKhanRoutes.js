@@ -32,6 +32,22 @@ router.post('/putloaivankhan/:idloaivankhan', async (req, res) => {
     }
 });
 
+router.get('/getloaivankhan', async (req, res) => {
+    try {
+        const loaivankhan = await LoaiVanKhan.find();
+        const loaidata = loaivankhan.map(data => {
+            return {
+                id: data._id,
+                name: data.name
+            }
+        })
+        res.json(loaidata);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Đã xảy ra lỗi.' });
+    }
+})
+
 
 
 router.post('/postvankhan', async (req, res) => {
@@ -49,21 +65,7 @@ router.post('/postvankhan', async (req, res) => {
     }
 });
 
-router.get('/getloaivankhan', async (req, res) => {
-    try {
-        const loaivankhan = await LoaiVanKhan.find();
-        const loaidata = loaivankhan.map(data => {
-            return {
-                id: data._id,
-                name: data.name
-            }
-        })
-        res.json(loaidata);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Đã xảy ra lỗi.' });
-    }
-})
+
 
 router.get('/getvankhan/:idloaivankhan', async (req, res) => {
     try {
