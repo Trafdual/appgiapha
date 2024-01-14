@@ -10,7 +10,10 @@ const storage = multer.memoryStorage()
 
 const upload = multer({ storage: storage })
 
-const buildFamilyTree = async (donghoId, memberId) => {
+//xem lại cây gia phả có thể chuyển thành truyền userId để check xem có lineage chưa nếu có rồi thì cho get ra cây gia phả luôn 
+// chưa có thì bắt nhập key để join vào cây gia phả 
+
+const buildFamilyTree = async (donghoId, memberId, generation = 1) => {
   try {
     let member;
 
@@ -43,6 +46,7 @@ const buildFamilyTree = async (donghoId, memberId) => {
       bio: member.bio,
       dead: member.dead,
       lineage: member.lineage,
+      generation,
       con: []
     }
 
@@ -56,13 +60,19 @@ const buildFamilyTree = async (donghoId, memberId) => {
     for (const child of member.con) {
       if (child._id) {
         const userchild = await UserGiaPha.findById(child._id);
-        const childNode = await buildFamilyTree(userchild.lineage, child._id)
+        const childNode = await buildFamilyTree(userchild.lineage, child._id,generation + 1)
         console.log(childNode)
         if (childNode) {
-          familyTreeNode.con.push(childNode)
+          familyTreeNode.con.push({
+            generation:generation+1,
+            member:childNode
+          })
         }
       }
     }
+    familyTreeNode.con.forEach(child => {
+      delete child.member.generation
+    });
 
     return familyTreeNode
   } catch (error) {
@@ -71,8 +81,6 @@ const buildFamilyTree = async (donghoId, memberId) => {
     )
   }
 }
-// làm thêm cây gia phả truyền iduser qua param dành cho admin (nhiệm vụ ngày mai)
-//post dòng họ thêm iduser vào để thêm ngược lại id dòng họ vào user
 
 router.get('/familyTree/:donghoId', async (req, res) => {
   try {
