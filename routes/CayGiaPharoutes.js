@@ -46,7 +46,7 @@ const buildFamilyTree = async (donghoId, memberId, generation = 1) => {
       bio: member.bio,
       dead: member.dead,
       lineage: member.lineage,
-      generation,
+      generation:generation,
       con: []
     }
 
@@ -63,16 +63,10 @@ const buildFamilyTree = async (donghoId, memberId, generation = 1) => {
         const childNode = await buildFamilyTree(userchild.lineage, child._id,generation + 1)
         console.log(childNode)
         if (childNode) {
-          familyTreeNode.con.push({
-            generation:generation+1,
-            member:childNode
-          })
+          familyTreeNode.con.push(childNode)
         }
       }
     }
-    familyTreeNode.con.forEach(child => {
-      delete child.member.generation
-    });
 
     return familyTreeNode
   } catch (error) {

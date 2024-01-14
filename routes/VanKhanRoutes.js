@@ -90,7 +90,6 @@ router.get('/getchitietvankhan/:idvankhan', async (req, res) => {
     try {
         const idvankhan = req.params.idvankhan;
         const vankhan = await VanKhan.findById(idvankhan);
-
         const vankhandata = {
             id: vankhan._id,
             name: vankhan.name,
