@@ -24,8 +24,8 @@ router.post('/postbaiviet/:userId', upload.array('images', 10), async (req, res)
     if (!user) {
       return res.status(404).json({ message: 'Không tìm thấy user' });
     }
-    const dongho=await DongHo.findById(user.lineage._id);
-    if(!dongho){
+    const dongho = await DongHo.findById(user.lineage._id);
+    if (!dongho) {
       return res.status(404).json({ message: 'không tìm thấy dòng họ' });
     }
 

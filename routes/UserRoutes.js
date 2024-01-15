@@ -29,7 +29,7 @@ router.post('/register', async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const currentDate = new Date();
-   
+
     const currentdateMoment = moment(currentDate, 'DD/MM/YYYY');
     const dateMoment = moment(date, 'DD/MM/YYYY');
     const yearsold = currentdateMoment.diff(dateMoment, 'years');
@@ -237,22 +237,18 @@ router.get('/user/:userId', async (req, res) => {
     }
 
     const responseData = {
-      success: true,
-      data: {
-        user: {
-          _id: user._id,
-          username: user.username,
-          hovaten: user.hovaten,
-          avatar: user.avatar,
-          namsinh: user.date,
-          tuoi: user.yearsold,
-          phone: user.phone,
-          address: user.address,
-          hometown: user.hometown,
-          job: user.job,
-          role: user.role
-        },
-      },
+      _id: user._id,
+      username: user.username,
+      hovaten: user.hovaten,
+      avatar: user.avatar,
+      namsinh: user.date,
+      tuoi: user.yearsold,
+      phone: user.phone,
+      address: user.address,
+      hometown: user.hometown,
+      job: user.job,
+      role: user.role
+
     };
 
     res.status(200).json(responseData);
