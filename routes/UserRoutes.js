@@ -10,6 +10,76 @@ const storage = multer.memoryStorage();
 
 const upload = multer({ storage: storage });
 
+//đây là api thử nghiệm thêm token của máy để test thông báo
+router.post('/register/:token', async (req, res) => {
+  try {
+    const { username, password, phone, hovaten, date, address, hometown, job, role } = req.body;
+const token=req.params.token;
+
+    if (!phone || !/^\d{10}$/.test(phone)) {
+      return res.status(400).json({ message: 'Số điện thoại không hợp lệ' });
+    }
+    const exitphone = await User.findOne({ phone });
+    if (exitphone) {
+      return res.status(400).json({ message: 'số điện thoại đã được đăng kí' });
+    }
+
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Tên người dùng đã tồn tại' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const currentDate = new Date();
+
+    const currentdateMoment = moment(currentDate, 'DD/MM/YYYY');
+    const dateMoment = moment(date, 'DD/MM/YYYY');
+    const yearsold = currentdateMoment.diff(dateMoment, 'years');
+
+    const user = new User({
+      username,
+      password: hashedPassword,
+      phone,
+      role,
+      address,
+      hometown,
+      date,
+      hovaten,
+      job,
+      yearsold
+    });
+    user.fcmToken.push(token);
+    await user.save();
+
+    const responseData = {
+      success: user.success,
+      data: {
+        user: [
+          {
+            _id: user._id,
+            username: user.username,
+            password: user.password,
+            hovaten: user.hovaten,
+            namsinh: user.date,
+            tuoi: user.yearsold,
+            phone: user.phone,
+            address: user.address,
+            hometown: user.hometown,
+            job: user.job,
+            role: user.role
+          },
+        ],
+      },
+    };
+
+    res.status(201).json(responseData);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Đã xảy ra lỗi.' });
+  }
+});
+
+
 router.post('/register', async (req, res) => {
   try {
     const { username, password, phone, hovaten, date, address, hometown, job, role } = req.body;

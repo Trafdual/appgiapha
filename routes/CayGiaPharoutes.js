@@ -20,7 +20,7 @@ const upload = multer({ storage: storage })
 
 const fcm = new FCM('AAAAweb7fLc:APA91bE6i6LcEfNK3rCzjJzpfAjn9vH2ACm-cJ_Kct88B2xXuxOBexUpiQMEZetAAypqYNcLv9Q7fU3oEfpFSHOwr_HAHqVoZnOuyJKss1b4AszppzT52XhaqT5frYfx582Bnwku67jk');
 
-// Hàm kiểm tra ngày giỗ và gửi thông báo
+// Hàm kiểm tra ngày giỗ và gửi thông báo (đang thử nghiệm, có thể cần truyền thêm token)
 async function checkAndSendNotifications(userIdgiapha,userId) {
     try {
         const usergiapha=await UserGiaPha.findOne({userId:userIdgiapha});
