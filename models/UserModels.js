@@ -19,6 +19,7 @@ const userSchema = new mongoose.Schema({
     baivietId: { type: mongoose.Schema.Types.ObjectId, ref: 'baiviet' },
     isLiked: { type: Boolean, default: false },
   }],
+  fcmToken:[{ type:String }]
 });
 
 const User = mongoose.model('user', userSchema);
