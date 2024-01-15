@@ -4,6 +4,7 @@ const usergiaphaSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'user' },
   name: { type: String },
   nickname: { type: String },
+  avatar: { type: String },
   sex: { type: String },
   date: { type: String },
   maritalstatus: { type: String },

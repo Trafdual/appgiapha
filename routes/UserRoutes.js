@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const moment = require('moment');
+const UserGiaPha = require("../models/UserGiaPhaModels");
 
 const storage = multer.memoryStorage();
 
@@ -278,7 +279,7 @@ router.post('/doiavatar/:userId', upload.single('avatar'), async (req, res) => {
     user.avatar = avatar;
     await user.save();
     // Cập nhật avatar cho tất cả người dùng có cùng _id
-    await User.updateMany({ _id: userId }, { avatar });
+    await UserGiaPha.updateMany({ userId: userId }, { avatar });
 
     return res.status(200).json({ message: 'Đổi avatar thành công.' });
   } catch (error) {
