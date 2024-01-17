@@ -144,6 +144,35 @@ router.get('/familyTree/:donghoId', async (req, res) => {
   }
 })
 
+router.get('/joindongho/:donghoId/:userId', async (req, res) => {
+  try {
+    const donghoId=req.params.donghoId;
+    const userId=req.params.userId;
+
+    const user=await User.findById(userId);
+
+    const dongho=await DongHo.findById(donghoId);
+    const { key } = req.body;
+    if (!key) {
+      return res.status(404).json({ message: 'bạn chưa nhập key' })
+    }
+
+    if(key!=dongho.key){
+      return res.status(404).json({ message: 'bạn nhập sai key' })
+    }
+
+    user.lineage=dongho._id;
+    await user.save();
+
+    res.json({message:'join dòng họ thành công'})
+
+  
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Internal Server Error' })
+  }
+})
+
 router.post('/addcon/:idcha', async (req, res) => {
   try {
     const idcha = req.params.idcha

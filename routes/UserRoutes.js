@@ -213,7 +213,7 @@ router.put('/updateUser/:idUser', async (req, res) => {
     if (address) user.address = address;
     if (hometown) user.hometown = hometown;
     if (job) user.job = job;
-    if (username) user.username = job;
+    if (username) user.username = username;
 
     await user.save();
 
