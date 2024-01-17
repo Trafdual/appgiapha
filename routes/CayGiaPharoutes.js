@@ -162,11 +162,11 @@ router.get('/joindongho/:donghoId/:userId', async (req, res) => {
     }
 
     user.lineage=dongho._id;
+    dongho.userId.push(userId);
     await user.save();
 
     res.json({message:'join dòng họ thành công'})
-
-  
+ 
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Internal Server Error' })
@@ -382,6 +382,7 @@ router.post('/postdongho/:userId', async (req, res) => {
     })
     user.lineage=dongho._id
     user.role='admin';
+    dongho.userId.push(userId);
     await dongho.save()
     await user.save();
     const resdata={
