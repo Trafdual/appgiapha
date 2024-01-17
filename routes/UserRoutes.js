@@ -178,7 +178,8 @@ router.post('/login', async (req, res) => {
             address: user.address,
             hometown: user.hometown,
             job: user.job,
-            role: user.role
+            role: user.role,
+            lineage:user.lineage || ''
           },
         ],
       },
@@ -195,7 +196,7 @@ router.post('/login', async (req, res) => {
 
 router.put('/updateUser/:idUser', async (req, res) => {
   try {
-    const { hovaten, namsinh, tuoi, phone, address, hometown, job } = req.body;
+    const {username, hovaten, namsinh, tuoi, phone, address, hometown, job } = req.body;
     const userId = req.params.idUser;
 
     const user = await User.findById(userId);
@@ -212,6 +213,7 @@ router.put('/updateUser/:idUser', async (req, res) => {
     if (address) user.address = address;
     if (hometown) user.hometown = hometown;
     if (job) user.job = job;
+    if (username) user.username = job;
 
     await user.save();
 
@@ -280,14 +282,15 @@ router.get('/users', async (req, res) => {
           _id: user._id,
           username: user.username,
           hovaten: user.hovaten,
-          avatar: user.avatar,
+          avatar: user.avatar || '',
           namsinh: user.date,
           tuoi: user.yearsold,
           phone: user.phone,
           address: user.address,
           hometown: user.hometown,
           job: user.job,
-          role: user.role
+          role: user.role,
+          lineage:user.lineage || ''
         })),
       },
     };
@@ -318,8 +321,8 @@ router.get('/user/:userId', async (req, res) => {
       address: user.address,
       hometown: user.hometown,
       job: user.job,
-      role: user.role
-
+      role: user.role,
+      lineage:user.lineage || ''
     };
 
     res.status(200).json(responseData);
