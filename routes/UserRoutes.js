@@ -4,10 +4,81 @@ const bcrypt = require("bcryptjs");
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const moment = require('moment');
+const UserGiaPha = require("../models/UserGiaPhaModels");
 
 const storage = multer.memoryStorage();
 
 const upload = multer({ storage: storage });
+
+//đây là api thử nghiệm thêm token của máy để test thông báo
+router.post('/register/:token', async (req, res) => {
+  try {
+    const { username, password, phone, hovaten, date, address, hometown, job, role } = req.body;
+    const token = req.params.token;
+
+    if (!phone || !/^\d{10}$/.test(phone)) {
+      return res.status(400).json({ message: 'Số điện thoại không hợp lệ' });
+    }
+    const exitphone = await User.findOne({ phone });
+    if (exitphone) {
+      return res.status(400).json({ message: 'số điện thoại đã được đăng kí' });
+    }
+
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Tên người dùng đã tồn tại' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const currentDate = new Date();
+
+    const currentdateMoment = moment(currentDate, 'DD/MM/YYYY');
+    const dateMoment = moment(date, 'DD/MM/YYYY');
+    const yearsold = currentdateMoment.diff(dateMoment, 'years');
+
+    const user = new User({
+      username,
+      password: hashedPassword,
+      phone,
+      role,
+      address,
+      hometown,
+      date,
+      hovaten,
+      job,
+      yearsold
+    });
+    user.fcmToken.push(token);
+    await user.save();
+
+    const responseData = {
+      success: user.success,
+      data: {
+        user: [
+          {
+            _id: user._id,
+            username: user.username,
+            password: user.password,
+            hovaten: user.hovaten,
+            namsinh: user.date,
+            tuoi: user.yearsold,
+            phone: user.phone,
+            address: user.address,
+            hometown: user.hometown,
+            job: user.job,
+            role: user.role
+          },
+        ],
+      },
+    };
+
+    res.status(201).json(responseData);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Đã xảy ra lỗi.' });
+  }
+});
+
 
 router.post('/register', async (req, res) => {
   try {
@@ -100,14 +171,15 @@ router.post('/login', async (req, res) => {
             username: user.username,
             password: user.password,
             hovaten: user.hovaten,
-            avatar: user.avatar,
+            avatar: user.avatar || '',
             namsinh: user.date,
             tuoi: user.yearsold,
             phone: user.phone,
             address: user.address,
             hometown: user.hometown,
             job: user.job,
-            role: user.role
+            role: user.role,
+            lineage: user.lineage || ''
           },
         ],
       },
@@ -124,7 +196,7 @@ router.post('/login', async (req, res) => {
 
 router.put('/updateUser/:idUser', async (req, res) => {
   try {
-    const { hovaten, namsinh, tuoi, phone, address, hometown, job } = req.body;
+    const { username, hovaten, namsinh, tuoi, phone, address, hometown, job } = req.body;
     const userId = req.params.idUser;
 
     const user = await User.findById(userId);
@@ -141,6 +213,7 @@ router.put('/updateUser/:idUser', async (req, res) => {
     if (address) user.address = address;
     if (hometown) user.hometown = hometown;
     if (job) user.job = job;
+    if (username) user.username = username;
 
     await user.save();
 
@@ -209,14 +282,15 @@ router.get('/users', async (req, res) => {
           _id: user._id,
           username: user.username,
           hovaten: user.hovaten,
-          avatar: user.avatar,
+          avatar: user.avatar || '',
           namsinh: user.date,
           tuoi: user.yearsold,
           phone: user.phone,
           address: user.address,
           hometown: user.hometown,
           job: user.job,
-          role: user.role
+          role: user.role,
+          lineage: user.lineage || ''
         })),
       },
     };
@@ -240,14 +314,15 @@ router.get('/user/:userId', async (req, res) => {
       _id: user._id,
       username: user.username,
       hovaten: user.hovaten,
-      avatar: user.avatar,
+      avatar: user.avatar || '',
       namsinh: user.date,
       tuoi: user.yearsold,
       phone: user.phone,
       address: user.address,
       hometown: user.hometown,
       job: user.job,
-      role: user.role
+      role: user.role,
+      lineage: user.lineage || ''
     };
 
     res.status(200).json(responseData);
@@ -277,7 +352,7 @@ router.post('/doiavatar/:userId', upload.single('avatar'), async (req, res) => {
     user.avatar = avatar;
     await user.save();
     // Cập nhật avatar cho tất cả người dùng có cùng _id
-    await User.updateMany({ _id: userId }, { avatar });
+    await UserGiaPha.updateMany({ userId: userId }, { avatar });
 
     return res.status(200).json({ message: 'Đổi avatar thành công.' });
   } catch (error) {

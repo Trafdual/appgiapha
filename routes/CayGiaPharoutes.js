@@ -5,6 +5,11 @@ const DongHo = require('../models/DongHoModel')
 const UserGiaPha = require('../models/UserGiaPhaModels')
 const User = require('../models/UserModels')
 const moment = require('moment');
+const FCM = require('fcm-node');
+
+
+// Khởi tạo Firebase Admin SDK
+// Đảm bảo bạn đã cung cấp đúng thông tin đăng nhập vào tệp sao lưu
 
 const storage = multer.memoryStorage()
 
@@ -12,6 +17,46 @@ const upload = multer({ storage: storage })
 
 //xem lại cây gia phả có thể chuyển thành truyền userId để check xem có lineage chưa nếu có rồi thì cho get ra cây gia phả luôn 
 // chưa có thì bắt nhập key để join vào cây gia phả 
+
+const fcm = new FCM('AAAAweb7fLc:APA91bE6i6LcEfNK3rCzjJzpfAjn9vH2ACm-cJ_Kct88B2xXuxOBexUpiQMEZetAAypqYNcLv9Q7fU3oEfpFSHOwr_HAHqVoZnOuyJKss1b4AszppzT52XhaqT5frYfx582Bnwku67jk');
+
+// Hàm kiểm tra ngày giỗ và gửi thông báo (đang thử nghiệm, có thể cần truyền thêm token)
+async function checkAndSendNotifications(userIdgiapha,userId) {
+    try {
+        const usergiapha=await UserGiaPha.findOne({userId:userIdgiapha});
+        const user = await User.findById(userId);
+        
+        
+        if (user && user.fcmToken) {
+         
+            const currentDate = new Date();
+            const currendateMoment = moment(currentDate, 'DD/MM/YYYY');
+            const deaddateMoment = moment(usergiapha.deadinfo.deaddate, 'DD/MM/YYYY');
+
+            // Kiểm tra xem đã đến ngày giỗ chưa
+            if (currendateMoment === deaddateMoment) {
+                // Gửi thông báo đến thiết bị
+                const message = {
+                    to: user.fcmToken,
+                    notification: {
+                        title: 'Thông báo',
+                        body: `Đến ngày giỗ của ${usergiapha.name}. Mong bạn bớt một chút thời gian để tưởng nhớ`,
+                    },
+                };
+
+                fcm.send(message, function (err, response) {
+                    if (err) {
+                        console.log('Lỗi khi gửi thông báo:', err);
+                    } else {
+                        console.log('Thông báo đã được gửi:', response);
+                    }
+                });
+            }
+        }
+    } catch (error) {
+        console.error('Lỗi khi lấy thông tin người dùng:', error);
+    }
+}
 
 const buildFamilyTree = async (donghoId, memberId, generation = 1) => {
   try {
@@ -93,6 +138,35 @@ router.get('/familyTree/:donghoId', async (req, res) => {
     let memberId=null
     const familyTreeJSON = await buildFamilyTree(donghoId,memberId);
     res.json(familyTreeJSON)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Internal Server Error' })
+  }
+})
+
+router.get('/joindongho/:donghoId/:userId', async (req, res) => {
+  try {
+    const donghoId=req.params.donghoId;
+    const userId=req.params.userId;
+
+    const user=await User.findById(userId);
+
+    const dongho=await DongHo.findById(donghoId);
+    const { key } = req.body;
+    if (!key) {
+      return res.status(404).json({ message: 'bạn chưa nhập key' })
+    }
+
+    if(key!=dongho.key){
+      return res.status(404).json({ message: 'bạn nhập sai key' })
+    }
+
+    user.lineage=dongho._id;
+    dongho.userId.push(userId);
+    await user.save();
+
+    res.json({message:'join dòng họ thành công'})
+ 
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Internal Server Error' })
@@ -308,6 +382,7 @@ router.post('/postdongho/:userId', async (req, res) => {
     })
     user.lineage=dongho._id
     user.role='admin';
+    dongho.userId.push(userId);
     await dongho.save()
     await user.save();
     const resdata={

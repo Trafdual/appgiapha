@@ -6,12 +6,12 @@ const methodOverride = require('method-override');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const MongoStore = require('connect-mongo');
-// const admin = require("firebase-admin");
-// const serviceAccount = require("./FireBaseConfig.json");
 const userroute = require('./routes/UserRoutes');
 const caygiapha = require('./routes/CayGiaPharoutes');
 const bangtinroute = require('./routes/BaiVietBangTinRoutes');
-const vankhanroute=require('./routes/VanKhanRoutes');
+const vankhanroute = require('./routes/VanKhanRoutes');
+const eventroute = require('./routes/EventRoutes');
+
 
 
 
@@ -50,37 +50,8 @@ app.use(cors());
 app.use('/', userroute);
 app.use('/', caygiapha);
 app.use('/', bangtinroute);
-app.use('/',vankhanroute);
-
-// admin.initializeApp({
-//   credential: admin.credential.cert(serviceAccount),
-// });
-
-// // Gửi thông báo
-// function sendNotification(deviceToken, title, body) {
-//   const message = {
-//     notification: {
-//       title: title,
-//       body: body,
-//     },
-//     token: deviceToken,
-//   };
-
-//   admin.messaging().send(message)
-//     .then((response) => {
-//       console.log("Successfully sent message:", response);
-//     })
-//     .catch((error) => {
-//       console.log("Error sending message:", error);
-//     });
-// }
-
-// // Sử dụng hàm sendNotification
-// const deviceToken = "Điền vào token của thiết bị cần nhận thông báo";
-// const notificationTitle = "Tiêu đề thông báo";
-// const notificationBody = "Nội dung thông báo";
-
-// sendNotification(deviceToken, notificationTitle, notificationBody);
+app.use('/', vankhanroute);
+app.use('/', eventroute);
 
 app.listen(8080, () => {
   try {
