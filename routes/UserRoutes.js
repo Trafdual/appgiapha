@@ -248,7 +248,6 @@ router.get('/user/:userId', async (req, res) => {
       hometown: user.hometown,
       job: user.job,
       role: user.role
-
     };
 
     res.status(200).json(responseData);
