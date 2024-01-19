@@ -13,9 +13,6 @@ const vankhanroute = require('./routes/VanKhanRoutes');
 const eventroute = require('./routes/EventRoutes');
 
 
-
-
-
 var app = express();
 app.use(methodOverride('_method'));
 

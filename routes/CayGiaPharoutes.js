@@ -7,16 +7,9 @@ const User = require('../models/UserModels')
 const moment = require('moment');
 const FCM = require('fcm-node');
 
-
-// Khởi tạo Firebase Admin SDK
-// Đảm bảo bạn đã cung cấp đúng thông tin đăng nhập vào tệp sao lưu
-
 const storage = multer.memoryStorage()
 
 const upload = multer({ storage: storage })
-
-//xem lại cây gia phả có thể chuyển thành truyền userId để check xem có lineage chưa nếu có rồi thì cho get ra cây gia phả luôn 
-// chưa có thì bắt nhập key để join vào cây gia phả 
 
 const fcm = new FCM('AAAAweb7fLc:APA91bE6i6LcEfNK3rCzjJzpfAjn9vH2ACm-cJ_Kct88B2xXuxOBexUpiQMEZetAAypqYNcLv9Q7fU3oEfpFSHOwr_HAHqVoZnOuyJKss1b4AszppzT52XhaqT5frYfx582Bnwku67jk');
 
@@ -57,7 +50,7 @@ async function checkAndSendNotifications(userIdgiapha,userId) {
         console.error('Lỗi khi lấy thông tin người dùng:', error);
     }
 }
-
+//cây gia phả
 const buildFamilyTree = async (donghoId, memberId, generation = 1) => {
   try {
     let member;
@@ -102,13 +95,15 @@ const buildFamilyTree = async (donghoId, memberId, generation = 1) => {
       familyTreeNode.deadinfo = member.deadinfo
     }
 
-    for (const child of member.con) {
-      if (child._id) {
-        const userchild = await UserGiaPha.findById(child._id);
-        const childNode = await buildFamilyTree(userchild.lineage, child._id,generation + 1)
-        console.log(childNode)
-        if (childNode) {
-          familyTreeNode.con.push(childNode)
+    if (member.con && member.con.length > 0) {
+      for (const child of member.con) {
+        if (child && child._id) {
+          const userchild = await UserGiaPha.findById(child._id);
+          const childNode = await buildFamilyTree(userchild.lineage, child._id, generation + 1);
+          console.log(childNode);
+          if (childNode) {
+            familyTreeNode.con.push(childNode);
+          }
         }
       }
     }
@@ -120,6 +115,64 @@ const buildFamilyTree = async (donghoId, memberId, generation = 1) => {
     )
   }
 }
+
+//hàm tính số đời của cây gia phả
+const countGenerations = (familyTree) => {
+  let maxGeneration = 1;
+
+  const traverseTree = (node, currentGeneration) => {
+    maxGeneration = Math.max(maxGeneration, currentGeneration);
+
+    for (const child of node.con) {
+      traverseTree(child, currentGeneration + 1);
+    }
+  };
+
+  traverseTree(familyTree, 1);
+
+  return maxGeneration;
+};
+
+router.get('/getdongho', async (req, res) => {
+  try {
+    const dongho = await DongHo.find().lean();
+    const donghodata = dongho.map(async (data) => {
+      if (data && data._id) {
+        const familyTree = await buildFamilyTree(data._id);
+        if (familyTree && familyTree.con) {
+          const totalGenerations = countGenerations(familyTree);
+          return {
+            _id: data._id,
+            name: data.name,
+            key: data.key,
+            address: data.address,
+            members: data.user ? data.user.length : 0,
+            generation: totalGenerations,
+          };
+        } else {
+          console.error(`Error building family tree for DongHo ${data._id}: Family tree or its children is null.`);
+          return {
+            _id: data._id,
+            name: data.name,
+            key: data.key,
+            address: data.address,
+            members: data.user ? data.user.length : 0,
+            generation: 0, // Đặt generation là 0 khi familyTree hoặc familyTree.con là null hoặc rỗng
+          };
+        }
+      } else {
+        console.error(`Error building family tree: DongHo data is null or missing _id.`);
+        return null;
+      }
+    });
+
+    const resolvedDonghoData = await Promise.all(donghodata);
+    res.json(resolvedDonghoData.filter(Boolean)); // Lọc bỏ các giá trị null khỏi mảng
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 router.get('/familyTree/:donghoId', async (req, res) => {
   try {
@@ -382,7 +435,7 @@ router.post('/postdongho/:userId', async (req, res) => {
     })
     user.lineage=dongho._id
     user.role='admin';
-    dongho.userId.push(userId);
+    dongho.userId.push()
     await dongho.save()
     await user.save();
     const resdata={
@@ -404,13 +457,5 @@ router.post('/postdongho/:userId', async (req, res) => {
   }
 })
 
-router.get('/getdongho', async (req, res) => {
-  try {
-    const dongho = await DongHo.find().lean()
-    res.json(dongho)
-  } catch (error) {
-    console.error(error)
-    res.status(500).json({ error: 'Internal Server Error' })
-  }
-})
+
 module.exports = router
