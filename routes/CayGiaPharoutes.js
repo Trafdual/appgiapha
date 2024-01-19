@@ -139,6 +139,8 @@ router.get('/getdongho', async (req, res) => {
     const donghodata = dongho.map(async (data) => {
       if (data && data._id) {
         const familyTree = await buildFamilyTree(data._id);
+        const firstUserId = data.userId.length > 0 ? data.userId[0]._id : null;
+        const user =await User.findById(firstUserId);
         if (familyTree && familyTree.con) {
           const totalGenerations = countGenerations(familyTree);
           return {
@@ -148,6 +150,10 @@ router.get('/getdongho', async (req, res) => {
             address: data.address,
             members: data.user ? data.user.length : 0,
             generation: totalGenerations,
+            creator:{
+              name:user.hovaten,
+              phone:user.phone
+            }
           };
         } else {
           console.error(`Error building family tree for DongHo ${data._id}: Family tree or its children is null.`);
@@ -158,6 +164,10 @@ router.get('/getdongho', async (req, res) => {
             address: data.address,
             members: data.user ? data.user.length : 0,
             generation: 0, // Đặt generation là 0 khi familyTree hoặc familyTree.con là null hoặc rỗng
+            creator:{
+              name:user.hovaten,
+              phone:user.phone
+            }
           };
         }
       } else {
@@ -197,7 +207,7 @@ router.get('/familyTree/:donghoId', async (req, res) => {
   }
 })
 
-router.get('/joindongho/:donghoId/:userId', async (req, res) => {
+router.post('/joindongho/:donghoId/:userId', async (req, res) => {
   try {
     const donghoId=req.params.donghoId;
     const userId=req.params.userId;
