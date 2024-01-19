@@ -11,7 +11,7 @@ const caygiapha = require('./routes/CayGiaPharoutes');
 const bangtinroute = require('./routes/BaiVietBangTinRoutes');
 const vankhanroute = require('./routes/VanKhanRoutes');
 const eventroute = require('./routes/EventRoutes');
-
+const giaimongroute = require('./routes/GiacMongRoutes');
 
 var app = express();
 app.use(methodOverride('_method'));
@@ -49,6 +49,8 @@ app.use('/', caygiapha);
 app.use('/', bangtinroute);
 app.use('/', vankhanroute);
 app.use('/', eventroute);
+app.use('/', giaimongroute);
+
 
 app.listen(8080, () => {
   try {
