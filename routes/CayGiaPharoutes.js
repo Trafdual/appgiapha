@@ -14,41 +14,41 @@ const upload = multer({ storage: storage })
 const fcm = new FCM('AAAAweb7fLc:APA91bE6i6LcEfNK3rCzjJzpfAjn9vH2ACm-cJ_Kct88B2xXuxOBexUpiQMEZetAAypqYNcLv9Q7fU3oEfpFSHOwr_HAHqVoZnOuyJKss1b4AszppzT52XhaqT5frYfx582Bnwku67jk');
 
 // Hàm kiểm tra ngày giỗ và gửi thông báo (đang thử nghiệm, có thể cần truyền thêm token)
-async function checkAndSendNotifications(userIdgiapha,userId) {
-    try {
-        const usergiapha=await UserGiaPha.findOne({userId:userIdgiapha});
-        const user = await User.findById(userId);
-        
-        
-        if (user && user.fcmToken) {
-         
-            const currentDate = new Date();
-            const currendateMoment = moment(currentDate, 'DD/MM/YYYY');
-            const deaddateMoment = moment(usergiapha.deadinfo.deaddate, 'DD/MM/YYYY');
+async function checkAndSendNotifications(userIdgiapha, userId) {
+  try {
+    const usergiapha = await UserGiaPha.findOne({ userId: userIdgiapha });
+    const user = await User.findById(userId);
 
-            // Kiểm tra xem đã đến ngày giỗ chưa
-            if (currendateMoment === deaddateMoment) {
-                // Gửi thông báo đến thiết bị
-                const message = {
-                    to: user.fcmToken,
-                    notification: {
-                        title: 'Thông báo',
-                        body: `Đến ngày giỗ của ${usergiapha.name}. Mong bạn bớt một chút thời gian để tưởng nhớ`,
-                    },
-                };
 
-                fcm.send(message, function (err, response) {
-                    if (err) {
-                        console.log('Lỗi khi gửi thông báo:', err);
-                    } else {
-                        console.log('Thông báo đã được gửi:', response);
-                    }
-                });
-            }
-        }
-    } catch (error) {
-        console.error('Lỗi khi lấy thông tin người dùng:', error);
+    if (user && user.fcmToken) {
+
+      const currentDate = new Date();
+      const currendateMoment = moment(currentDate, 'DD/MM/YYYY');
+      const deaddateMoment = moment(usergiapha.deadinfo.deaddate, 'DD/MM/YYYY');
+
+      // Kiểm tra xem đã đến ngày giỗ chưa
+      if (currendateMoment === deaddateMoment) {
+        // Gửi thông báo đến thiết bị
+        const message = {
+          to: user.fcmToken,
+          notification: {
+            title: 'Thông báo',
+            body: `Đến ngày giỗ của ${usergiapha.name}. Mong bạn bớt một chút thời gian để tưởng nhớ`,
+          },
+        };
+
+        fcm.send(message, function (err, response) {
+          if (err) {
+            console.log('Lỗi khi gửi thông báo:', err);
+          } else {
+            console.log('Thông báo đã được gửi:', response);
+          }
+        });
+      }
     }
+  } catch (error) {
+    console.error('Lỗi khi lấy thông tin người dùng:', error);
+  }
 }
 //cây gia phả
 const buildFamilyTree = async (donghoId, memberId, generation = 1) => {
@@ -72,27 +72,10 @@ const buildFamilyTree = async (donghoId, memberId, generation = 1) => {
     const familyTreeNode = {
       _id: member._id,
       name: member.name,
-      nickname: member.nickname,
-      sex: member.sex,
       date: member.date,
-      academiclevel: member.academiclevel,
-      phone: member.phone,
-      maritalstatus: member.maritalstatus,
-      job: member.job,
-      address: member.address,
-      hometown: member.hometown,
-      bio: member.bio,
       dead: member.dead,
-      lineage: member.lineage,
-      generation:generation,
+      generation: generation,
       con: []
-    }
-
-    if (familyTreeNode.dead == false) {
-      member.deadinfo = undefined;
-      familyTreeNode.deadinfo = member.deadinfo
-    } else {
-      familyTreeNode.deadinfo = member.deadinfo
     }
 
     if (member.con && member.con.length > 0) {
@@ -140,7 +123,7 @@ router.get('/getdongho', async (req, res) => {
       if (data && data._id) {
         const familyTree = await buildFamilyTree(data._id);
         const firstUserId = data.userId.length > 0 ? data.userId[0]._id : null;
-        const user =await User.findById(firstUserId);
+        const user = await User.findById(firstUserId);
         if (familyTree && familyTree.con) {
           const totalGenerations = countGenerations(familyTree);
           return {
@@ -150,9 +133,9 @@ router.get('/getdongho', async (req, res) => {
             address: data.address,
             members: data.user ? data.user.length : 0,
             generation: totalGenerations,
-            creator:{
-              name:user.hovaten,
-              phone:user.phone
+            creator: {
+              name: user ? user.hovaten : '', // Kiểm tra xem user có tồn tại không trước khi truy cập thuộc tính
+              phone: user ? user.phone : '' // Kiểm tra xem user có tồn tại không trước khi truy cập thuộc tính
             }
           };
         } else {
@@ -164,9 +147,9 @@ router.get('/getdongho', async (req, res) => {
             address: data.address,
             members: data.user ? data.user.length : 0,
             generation: 0, // Đặt generation là 0 khi familyTree hoặc familyTree.con là null hoặc rỗng
-            creator:{
-              name:user.hovaten,
-              phone:user.phone
+            creator: {
+              name: user ? user.hovaten : '', // Kiểm tra xem user có tồn tại không trước khi truy cập thuộc tính
+              phone: user ? user.phone : '' // Kiểm tra xem user có tồn tại không trước khi truy cập thuộc tính
             }
           };
         }
@@ -186,21 +169,31 @@ router.get('/getdongho', async (req, res) => {
 
 router.get('/familyTree/:donghoId', async (req, res) => {
   try {
-    const donghoId=req.params.donghoId;
+    const donghoId = req.params.donghoId;
 
-    const dongho=await DongHo.findById(donghoId);
+    const dongho = await DongHo.findById(donghoId);
+    const firstUserId = dongho.userId.length > 0 ? dongho.userId[0]._id : null;
+    const user=await User.findById(firstUserId);
     const { key } = req.body;
     if (!key) {
       return res.status(404).json({ message: 'bạn chưa nhập key' })
     }
 
-    if(key!=dongho.key){
+    if (key != dongho.key) {
       return res.status(404).json({ message: 'bạn nhập sai key' })
     }
 
-    let memberId=null
-    const familyTreeJSON = await buildFamilyTree(donghoId,memberId);
-    res.json(familyTreeJSON)
+    let memberId = null
+    
+    const familyTreeJSON = await buildFamilyTree(donghoId, memberId);
+    const familydata={
+      creator:{
+        name:user.hovaten,
+        phone:user.phone
+      },
+      familyTreeJSON
+    }
+    res.json(familydata);
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Internal Server Error' })
@@ -209,27 +202,27 @@ router.get('/familyTree/:donghoId', async (req, res) => {
 
 router.post('/joindongho/:donghoId/:userId', async (req, res) => {
   try {
-    const donghoId=req.params.donghoId;
-    const userId=req.params.userId;
+    const donghoId = req.params.donghoId;
+    const userId = req.params.userId;
 
-    const user=await User.findById(userId);
+    const user = await User.findById(userId);
 
-    const dongho=await DongHo.findById(donghoId);
+    const dongho = await DongHo.findById(donghoId);
     const { key } = req.body;
     if (!key) {
       return res.status(404).json({ message: 'bạn chưa nhập key' })
     }
 
-    if(key!=dongho.key){
+    if (key != dongho.key) {
       return res.status(404).json({ message: 'bạn nhập sai key' })
     }
 
-    user.lineage=dongho._id;
+    user.lineage = dongho._id;
     dongho.userId.push(userId);
     await user.save();
 
-    res.json({message:'join dòng họ thành công'})
- 
+    res.json({ message: 'join dòng họ thành công' })
+
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Internal Server Error' })
@@ -284,9 +277,9 @@ router.post('/addcon/:idcha', async (req, res) => {
       bio,
       dead,
     };
-    
+
     if (phone) {
-      if ( !/^\d{10}$/.test(phone)) {
+      if (!/^\d{10}$/.test(phone)) {
         return res.status(400).json({ message: 'Số điện thoại không hợp lệ' });
       }
       newMemberData.phone = phone;
@@ -314,7 +307,7 @@ router.post('/addcon/:idcha', async (req, res) => {
     cha.con.push(newMember._id)
 
     dongho.user.push(newMember._id)
-  
+
 
     await newMember.save()
     await dongho.save()
@@ -348,6 +341,45 @@ router.get('/getmember', async (req, res) => {
   }
 })
 
+
+
+router.get('/getmember/:userId', async (req, res) => {
+
+  try {
+    const userId = req.params.userId;
+
+    const member = await UserGiaPha.findById(userId);
+    const userdata = {
+      _id: member._id,
+      name: member.name,
+      nickname: member.nickname,
+      sex: member.sex,
+      date: member.date,
+      academiclevel: member.academiclevel,
+      phone: member.phone,
+      maritalstatus: member.maritalstatus,
+      job: member.job,
+      address: member.address,
+      hometown: member.hometown,
+      bio: member.bio,
+      dead: member.dead,
+      lineage: member.lineage,
+    }
+
+    if (userdata.dead == false) {
+      member.deadinfo = undefined;
+      userdata.deadinfo = member.deadinfo
+    } else {
+      userdata.deadinfo = member.deadinfo
+    }
+    res.json(userdata)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Internal Server Error' })
+  }
+})
+
+
 router.post('/addMember/:iddongho', async (req, res) => {
   try {
     const iddongho = req.params.iddongho
@@ -375,7 +407,7 @@ router.post('/addMember/:iddongho', async (req, res) => {
     if (!parent) {
       return res.status(404).json({ error: 'Parent not found' })
     }
-    
+
 
     const deaddateMoment = moment(deaddate, 'DD/MM/YYYY');
     const dateMoment = moment(date, 'DD/MM/YYYY');
@@ -394,9 +426,9 @@ router.post('/addMember/:iddongho', async (req, res) => {
       bio,
       dead,
     };
-    
+
     if (phone) {
-      if ( !/^\d{10}$/.test(phone)) {
+      if (!/^\d{10}$/.test(phone)) {
         return res.status(400).json({ message: 'Số điện thoại không hợp lệ' });
       }
       newMemberData.phone = phone;
@@ -436,29 +468,29 @@ router.post('/addMember/:iddongho', async (req, res) => {
 router.post('/postdongho/:userId', async (req, res) => {
   try {
     const userId = req.params.userId;
-    const user=await User.findById(userId);
-    const { name, address,key } = req.body
+    const user = await User.findById(userId);
+    const { name, address, key } = req.body
     const dongho = new DongHo({
       name,
       address,
       key
     })
-    user.lineage=dongho._id
-    user.role='admin';
-    dongho.userId.push()
+    user.lineage = dongho._id
+    user.role = 'admin';
+    dongho.userId.push(userId)
     await dongho.save()
     await user.save();
-    const resdata={
-      iddongho:dongho._id,
-      namedongho:dongho.name,
-      addressdongho:dongho.address,
-      key:dongho.key,
-      username:user.username,
-      hovaten:user.hovaten,
-      address:user.address,
-      hometown:user.hometown,
-      phone:user.phone,
-      role:user.role
+    const resdata = {
+      iddongho: dongho._id,
+      namedongho: dongho.name,
+      addressdongho: dongho.address,
+      key: dongho.key,
+      username: user.username,
+      hovaten: user.hovaten,
+      address: user.address,
+      hometown: user.hometown,
+      phone: user.phone,
+      role: user.role
     }
     res.json(resdata);
   } catch (error) {
