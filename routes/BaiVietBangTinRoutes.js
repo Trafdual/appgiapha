@@ -140,6 +140,19 @@ router.get('/getbaiviet/:userId', async (req, res) => {
     const posts = await Baiviet.find().populate('userId', 'username avatar');
     
     const donghodata = await Promise.all(posts.map(async (baiviet) => {
+      const comments = await Promise.all(baiviet.comment.map(async (commentItem) => {
+        const usercmt = await User.findById(commentItem.userID._id);
+        const formatdatecmt = moment(commentItem.date).format('DD/MM/YYYY HH:mm:ss')
+        return {
+          _id: commentItem._id,
+          userId: usercmt._id,
+          cmt: commentItem.cmt,
+          username: usercmt.username,
+          role: usercmt.role,
+          avatar: usercmt.avatar || '',
+          date: formatdatecmt
+        };
+      }));
       const formatdate = moment(baiviet.date).format('DD/MM/YYYY HH:mm:ss');
       const isLiked = user.favoriteBaiviet.some(favorite => favorite.baivietId.toString() === baiviet._id.toString());
       const isBaivietInDongho = dongho.baiviet.some(dhBaiviet => dhBaiviet.toString() === baiviet._id.toString());
@@ -155,17 +168,18 @@ router.get('/getbaiviet/:userId', async (req, res) => {
           content: baiviet.content,
           like: baiviet.like,
           isLiked: isLiked,
-          date: formatdate,
+          date: formatdate,   
+          comment: comments,
+          commentCount: baiviet.comment.length,
           images: baiviet.images
         };
       }
-
       return null;
     }));
 
     const filteredDonghodata = donghodata.filter(item => item !== null);
 
-    return res.status(200).json({ success: true, donghodata });
+    return res.status(200).json({ success: true, donghodata: filteredDonghodata });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ success: false, message: 'Internal Server Error' });
