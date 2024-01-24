@@ -66,7 +66,7 @@ const buildFamilyTree = async (donghoId, memberId, generation = 1) => {
     }
 
     if (!member) {
-      return null;
+      return [];
     }
 
     const familyTreeNode = {
@@ -91,13 +91,46 @@ const buildFamilyTree = async (donghoId, memberId, generation = 1) => {
       }
     }
 
-    return familyTreeNode
+    return [familyTreeNode];
   } catch (error) {
     console.error(
       `Error building family tree for member ${memberId}: ${error.message}`
     )
   }
 }
+
+router.get('/familyTree/:donghoId', async (req, res) => {
+  try {
+    const donghoId = req.params.donghoId;
+
+    const dongho = await DongHo.findById(donghoId);
+    const firstUserId = dongho.userId.length > 0 ? dongho.userId[0]._id : null;
+    const user=await User.findById(firstUserId);
+    const { key } = req.body;
+    if (!key) {
+      return res.status(404).json({ message: 'bạn chưa nhập key' })
+    }
+
+    if (key != dongho.key) {
+      return res.status(404).json({ message: 'bạn nhập sai key' })
+    }
+
+    let memberId = null
+    
+    const familyTreeJSON = await buildFamilyTree(donghoId, memberId);
+    const familydata={
+      creator:{
+        name:user.hovaten,
+        phone:user.phone
+      },
+      familyTreeJSON
+    }
+    res.json(familydata);
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Internal Server Error' })
+  }
+})
 
 //hàm tính số đời của cây gia phả
 const countGenerations = (familyTree) => {
@@ -167,39 +200,6 @@ router.get('/getdongho', async (req, res) => {
   }
 });
 
-router.get('/familyTree/:donghoId', async (req, res) => {
-  try {
-    const donghoId = req.params.donghoId;
-
-    const dongho = await DongHo.findById(donghoId);
-    const firstUserId = dongho.userId.length > 0 ? dongho.userId[0]._id : null;
-    const user=await User.findById(firstUserId);
-    const { key } = req.body;
-    if (!key) {
-      return res.status(404).json({ message: 'bạn chưa nhập key' })
-    }
-
-    if (key != dongho.key) {
-      return res.status(404).json({ message: 'bạn nhập sai key' })
-    }
-
-    let memberId = null
-    
-    const familyTreeJSON = await buildFamilyTree(donghoId, memberId);
-    const familydata={
-      creator:{
-        name:user.hovaten,
-        phone:user.phone
-      },
-      familyTreeJSON
-    }
-    res.json(familydata);
-  } catch (error) {
-    console.error(error)
-    res.status(500).json({ error: 'Internal Server Error' })
-  }
-})
-
 router.post('/joindongho/:donghoId/:userId', async (req, res) => {
   try {
     const donghoId = req.params.donghoId;
@@ -220,6 +220,7 @@ router.post('/joindongho/:donghoId/:userId', async (req, res) => {
     user.lineage = dongho._id;
     dongho.userId.push(userId);
     await user.save();
+    await dongho.save();
 
     res.json({ message: 'join dòng họ thành công' })
 
@@ -340,8 +341,6 @@ router.get('/getmember', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' })
   }
 })
-
-
 
 router.get('/getmember/:userId', async (req, res) => {
 

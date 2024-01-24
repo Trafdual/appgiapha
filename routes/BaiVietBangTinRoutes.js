@@ -138,30 +138,34 @@ router.get('/getbaiviet/:userId', async (req, res) => {
     const dongho = await DongHo.findById(user.lineage._id);
 
     const posts = await Baiviet.find().populate('userId', 'username avatar');
-    let donghodata = [];
-
-    posts.forEach(baiviet => {
+    
+    const donghodata = await Promise.all(posts.map(async (baiviet) => {
       const formatdate = moment(baiviet.date).format('DD/MM/YYYY HH:mm:ss');
       const isLiked = user.favoriteBaiviet.some(favorite => favorite.baivietId.toString() === baiviet._id.toString());
       const isBaivietInDongho = dongho.baiviet.some(dhBaiviet => dhBaiviet.toString() === baiviet._id.toString());
+      const userdata = await User.findById(baiviet.userId._id);
 
       if (isBaivietInDongho) {
-        donghodata.push({
+        return {
           _id: baiviet._id,
           userId: baiviet.userId._id,
-          username: user.username,
-          role: user.role,
-          avatar: user.avatar || '',
+          username: userdata.username,
+          role: userdata.role,
+          avatar: userdata.avatar || '',
           content: baiviet.content,
           like: baiviet.like,
           isLiked: isLiked,
           date: formatdate,
           images: baiviet.images
-        });
+        };
       }
-    });
 
-    return res.status(200).json({ success: true, donghodata });
+      return null;
+    }));
+
+    const filteredDonghodata = donghodata.filter(item => item !== null);
+
+    return res.status(200).json({ success: true, donghodata: filteredDonghodata });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ success: false, message: 'Internal Server Error' });
