@@ -165,7 +165,7 @@ router.get('/getbaiviet/:userId', async (req, res) => {
 
     const filteredDonghodata = donghodata.filter(item => item !== null);
 
-    return res.status(200).json({ success: true, donghodata: filteredDonghodata });
+    return res.status(200).json({ success: true, donghodata });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ success: false, message: 'Internal Server Error' });
