@@ -105,7 +105,7 @@ router.get('/familyTree/:donghoId', async (req, res) => {
 
     const dongho = await DongHo.findById(donghoId);
     const firstUserId = dongho.userId.length > 0 ? dongho.userId[0]._id : null;
-    const user=await User.findById(firstUserId);
+    const user = await User.findById(firstUserId);
     const { key } = req.body;
     if (!key) {
       return res.status(404).json({ message: 'bạn chưa nhập key' })
@@ -116,12 +116,12 @@ router.get('/familyTree/:donghoId', async (req, res) => {
     }
 
     let memberId = null
-    
+
     const familyTreeJSON = await buildFamilyTree(donghoId, memberId);
-    const familydata={
-      creator:{
-        name:user.hovaten,
-        phone:user.phone
+    const familydata = {
+      creator: {
+        name: user.hovaten,
+        phone: user.phone
       },
       familyTreeJSON
     }
@@ -210,11 +210,11 @@ router.post('/joindongho/:donghoId/:userId', async (req, res) => {
     const dongho = await DongHo.findById(donghoId);
     const { key } = req.body;
     if (!key) {
-      return res.status(404).json({ message: 'bạn chưa nhập key' })
+      return res.status(404).json({ message: 'Bạn chưa nhập key' })
     }
 
-    if (key != dongho.key) {
-      return res.status(404).json({ message: 'bạn nhập sai key' })
+    if (key !== dongho.key) {
+      return res.status(404).json({ message: 'Bạn nhập sai key' })
     }
 
     user.lineage = dongho._id;
@@ -222,13 +222,38 @@ router.post('/joindongho/:donghoId/:userId', async (req, res) => {
     await user.save();
     await dongho.save();
 
-    res.json({ message: 'join dòng họ thành công' })
+    // Retrieve updated user information
+    const updatedUser = await User.findById(userId);
+
+    res.json({
+      success: updatedUser.success,
+      data: {
+        user: [
+          {
+            _id: updatedUser._id,
+            username: updatedUser.username,
+            password: updatedUser.password,
+            hovaten: updatedUser.hovaten,
+            avatar: updatedUser.avatar || '',
+            namsinh: updatedUser.date,
+            tuoi: updatedUser.yearsold,
+            phone: updatedUser.phone,
+            address: updatedUser.address,
+            hometown: updatedUser.hometown,
+            job: updatedUser.job,
+            role: updatedUser.role,
+            lineage: updatedUser.lineage || ''
+          },
+        ],
+      },
+    });
 
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Internal Server Error' })
   }
 })
+
 
 router.post('/addcon/:idcha', async (req, res) => {
   try {
