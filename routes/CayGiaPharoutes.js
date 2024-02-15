@@ -420,7 +420,7 @@ router.post('/addMember/:iddongho', async (req, res) => {
     const iddongho = req.params.iddongho
     const {
       name,
-      userId,
+      username,
       nickname,
       sex,
       date,
@@ -448,7 +448,9 @@ router.post('/addMember/:iddongho', async (req, res) => {
     const dateMoment = moment(date, 'DD/MM/YYYY');
     const lived = deaddateMoment.diff(dateMoment, 'years');
 
-    const newMemberData = {
+ 
+
+    const newMember = new UserGiaPha(
       name,
       nickname,
       sex,
@@ -459,26 +461,20 @@ router.post('/addMember/:iddongho', async (req, res) => {
       address,
       hometown,
       bio,
-      dead,
-    };
+      dead);
 
-    if (phone) {
-      if (!/^\d{10}$/.test(phone)) {
-        return res.status(400).json({ message: 'Số điện thoại không hợp lệ' });
+      if (phone) {
+        if (!/^\d{10}$/.test(phone)) {
+          return res.status(400).json({ message: 'Số điện thoại không hợp lệ' });
+        }
+        newMember.phone = phone;
       }
-      newMemberData.phone = phone;
-    }
+      const user = await User.findOne(username);
 
-    if (userId) {
-      const user = await User.findById(userId)
-      if (!user) {
-        return res.status(404).json({ error: 'Người dùng không tồn tại' })
+      if (user) {
+        newMember.userId = user._id;
+        parent.userId.push(user._id)
       }
-      newMemberData.userId = userId;
-      parent.userId.push(userId)
-    }
-
-    const newMember = new UserGiaPha(newMemberData);
 
     if (newMember.dead == false) {
       newMember.deadinfo = undefined;
