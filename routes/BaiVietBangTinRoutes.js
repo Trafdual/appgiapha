@@ -138,7 +138,7 @@ router.get('/getbaiviet/:userId', async (req, res) => {
     const dongho = await DongHo.findById(user.lineage._id);
 
     const posts = await Baiviet.find().populate('userId', 'username avatar');
-    
+
     const donghodata = await Promise.all(posts.map(async (baiviet) => {
       const comments = await Promise.all(baiviet.comment.map(async (commentItem) => {
         const usercmt = await User.findById(commentItem.userID._id);
@@ -168,7 +168,7 @@ router.get('/getbaiviet/:userId', async (req, res) => {
           content: baiviet.content,
           like: baiviet.like,
           isLiked: isLiked,
-          date: formatdate,   
+          date: formatdate,
           comment: comments,
           commentCount: baiviet.comment.length,
           images: baiviet.images
@@ -179,7 +179,7 @@ router.get('/getbaiviet/:userId', async (req, res) => {
 
     const filteredDonghodata = donghodata.filter(item => item !== null);
 
-    return res.status(200).json({ success: true, donghodata: filteredDonghodata });
+    return res.status(200).json(filteredDonghodata);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ success: false, message: 'Internal Server Error' });
