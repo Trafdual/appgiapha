@@ -257,6 +257,7 @@ router.get('/notifybaiviet/:userId', async (req, res) => {
     res.status(500).json({ error: 'Đã xảy ra lỗi khi tìm thông báo.' });
   }
 });
+
 router.post('/postcmtbaiviet/:baivietId/:userId', async (req, res) => {
   try {
     const baivietId = req.params.baivietId;
@@ -304,6 +305,7 @@ router.post('/postcmtbaiviet/:baivietId/:userId', async (req, res) => {
     res.status(500).json({ error: 'Đã xảy ra lỗi khi post bình luận.' });
   }
 });
+
 router.get('/getcmtbaiviet/:baivietId', async (req, res) => {
   try {
     const baivietId = req.params.baivietId;
@@ -356,6 +358,7 @@ router.get('/getcmtbaiviet/:baivietId', async (req, res) => {
     res.status(500).json({ error: 'Đã xảy ra lỗi khi lấy bình luận bài viết' });
   }
 });
+
 router.put('/updatecmtbaiviet/:baivietId/:commentId', async (req, res) => {
   try {
     const baivietId = req.params.baivietId;
@@ -383,6 +386,7 @@ router.put('/updatecmtbaiviet/:baivietId/:commentId', async (req, res) => {
     res.status(500).json({ error: 'Đã xảy ra lỗi khi sửa bình luận' });
   }
 });
+
 router.delete('/deletecmtbaiviet/:baivietId/:commentId/:userId', async (req, res) => {
   try {
     const baivietId = req.params.baivietId;

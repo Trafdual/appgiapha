@@ -105,7 +105,7 @@ router.get('/familyTree/:donghoId', async (req, res) => {
 
     const dongho = await DongHo.findById(donghoId);
     const firstUserId = dongho.userId.length > 0 ? dongho.userId[0]._id : null;
-    const user=await User.findById(firstUserId);
+    const user = await User.findById(firstUserId);
     const { key } = req.body;
     if (!key) {
       return res.status(404).json({ message: 'bạn chưa nhập key' })
@@ -116,12 +116,12 @@ router.get('/familyTree/:donghoId', async (req, res) => {
     }
 
     let memberId = null
-    
+
     const familyTreeJSON = await buildFamilyTree(donghoId, memberId);
-    const familydata={
-      creator:{
-        name:user.hovaten,
-        phone:user.phone
+    const familydata = {
+      creator: {
+        name: user.hovaten,
+        phone: user.phone
       },
       familyTreeJSON
     }
@@ -139,8 +139,10 @@ const countGenerations = (familyTree) => {
   const traverseTree = (node, currentGeneration) => {
     maxGeneration = Math.max(maxGeneration, currentGeneration);
 
-    for (const child of node.con) {
-      traverseTree(child, currentGeneration + 1);
+    if (node.con && Array.isArray(node.con)) { // Kiểm tra xem node.con tồn tại và có phải là một mảng không
+      for (const child of node.con) {
+        traverseTree(child, currentGeneration + 1);
+      }
     }
   };
 
@@ -157,34 +159,18 @@ router.get('/getdongho', async (req, res) => {
         const familyTree = await buildFamilyTree(data._id);
         const firstUserId = data.userId.length > 0 ? data.userId[0]._id : null;
         const user = await User.findById(firstUserId);
-        if (familyTree && familyTree.con) {
-          const totalGenerations = countGenerations(familyTree);
-          return {
-            _id: data._id,
-            name: data.name,
-            key: data.key,
-            address: data.address,
-            members: data.user ? data.user.length : 0,
-            generation: totalGenerations,
-            creator: {
-              name: user ? user.hovaten : '', // Kiểm tra xem user có tồn tại không trước khi truy cập thuộc tính
-              phone: user ? user.phone : '' // Kiểm tra xem user có tồn tại không trước khi truy cập thuộc tính
-            }
-          };
-        } else {
-          console.error(`Error building family tree for DongHo ${data._id}: Family tree or its children is null.`);
-          return {
-            _id: data._id,
-            name: data.name,
-            key: data.key,
-            address: data.address,
-            members: data.user ? data.user.length : 0,
-            generation: 0, // Đặt generation là 0 khi familyTree hoặc familyTree.con là null hoặc rỗng
-            creator: {
-              name: user ? user.hovaten : '', // Kiểm tra xem user có tồn tại không trước khi truy cập thuộc tính
-              phone: user ? user.phone : '' // Kiểm tra xem user có tồn tại không trước khi truy cập thuộc tính
-            }
-          };
+        const totalGenerations = countGenerations(familyTree);
+        return {
+          _id: data._id,
+          name: data.name,
+          key: data.key,
+          address: data.address,
+          members: data.user ? data.user.length : 0,
+          generation: totalGenerations,
+          creator: {
+            name: user ? user.hovaten : '', // Kiểm tra xem user có tồn tại không trước khi truy cập thuộc tính
+            phone: user ? user.phone : '' // Kiểm tra xem user có tồn tại không trước khi truy cập thuộc tính
+          }
         }
       } else {
         console.error(`Error building family tree: DongHo data is null or missing _id.`);
@@ -235,7 +221,7 @@ router.post('/addcon/:idcha', async (req, res) => {
     const idcha = req.params.idcha
     const {
       name,
-      userId,
+      username,
       nickname,
       sex,
       date,
@@ -264,9 +250,9 @@ router.post('/addcon/:idcha', async (req, res) => {
 
     const dongho = await DongHo.findById(cha.lineage)
 
-    const newMemberData = {
+
+    const newMember = new UserGiaPha(
       name,
-      userId,
       nickname,
       sex,
       date,
@@ -276,26 +262,21 @@ router.post('/addcon/:idcha', async (req, res) => {
       address,
       hometown,
       bio,
-      dead,
-    };
+      dead);
+
+    const user = await User.findOne(username);
+
+    if (user) {
+      newMember.userId = user._id;
+      dongho.userId.push(user._id)
+    }
 
     if (phone) {
       if (!/^\d{10}$/.test(phone)) {
         return res.status(400).json({ message: 'Số điện thoại không hợp lệ' });
       }
-      newMemberData.phone = phone;
+      newMember.phone = phone;
     }
-
-    if (userId) {
-      const user = await User.findById(userId)
-      if (!user) {
-        return res.status(404).json({ error: 'Người dùng không tồn tại' })
-      }
-      newMemberData.userId = userId;
-      dongho.userId.push(userId)
-    }
-
-    const newMember = new UserGiaPha(newMemberData);
 
     if (newMember.dead == false) {
       newMember.deadinfo = undefined;
@@ -320,6 +301,36 @@ router.post('/addcon/:idcha', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' })
   }
 })
+
+router.get('/gettenUser/:donghoId', async (req, res) => {
+  try {
+    const donghoId = req.params.donghoId;
+    const dongho = await DongHo.findById(donghoId);
+
+    if (!dongho) {
+      return res.status(404).json({ message: 'Không tìm thấy đối tượng dòng họ' });
+    }
+
+    const userIds = dongho.userId; // Lấy ra mảng userId từ đối tượng dongho
+
+    if (!userIds || userIds.length === 0) {
+      return res.status(404).json({ message: 'Không có userId nào được tìm thấy trong đối tượng dòng họ' });
+    }
+
+    const users = await User.find({ _id: { $in: userIds } }); // Truy vấn tất cả người dùng với các userId trong mảng userIds
+
+    if (!users || users.length === 0) {
+      return res.status(404).json({ message: 'Không tìm thấy thông tin người dùng' });
+    }
+
+    const userNames = users.map(user => user.username); // Thu thập tên của tất cả người dùng
+
+    res.json(userNames); // Gửi danh sách tên người dùng trong phản hồi
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Lỗi máy chủ nội bộ' });
+  }
+});
 
 router.get('/getmember', async (req, res) => {
   try {
