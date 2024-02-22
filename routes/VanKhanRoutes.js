@@ -55,6 +55,9 @@ router.post('/postvankhan', async (req, res) => {
         const { name, gioithieu, samle, vankhan, loai } = req.body;
         const vankhann = new VanKhan({ name, gioithieu, samle, vankhan, loai });
         const loaivankhan = await LoaiVanKhan.findOne({ name: loai });
+        if(!loaivankhan){
+            return res.status(400).json({ message: 'loại văn khấn không tồn tại' });
+        }
         loaivankhan.vankhan.push(vankhann._id);
         await vankhann.save();
         await loaivankhan.save();
