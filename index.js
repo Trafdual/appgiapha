@@ -12,6 +12,7 @@ const bangtinroute = require('./routes/BaiVietBangTinRoutes');
 const vankhanroute = require('./routes/VanKhanRoutes');
 const eventroute = require('./routes/EventRoutes');
 const giaimongroute = require('./routes/GiacMongRoutes');
+const quexamroute=require('./routes/QueXamRoutes');
 
 var app = express();
 app.use(methodOverride('_method'));
@@ -50,6 +51,7 @@ app.use('/', bangtinroute);
 app.use('/', vankhanroute);
 app.use('/', eventroute);
 app.use('/', giaimongroute);
+app.use('/', quexamroute);
 
 
 app.listen(8080, () => {
