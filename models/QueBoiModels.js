@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const queboiSchema = new mongoose.Schema({
-nameque:{type:Number},
+nameque:{type:String},
 content:{type:String},
 idxam:{type: mongoose.Schema.Types.ObjectId, ref: 'xam'}
 });
