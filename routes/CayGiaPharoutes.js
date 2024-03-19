@@ -276,7 +276,7 @@ router.post('/addcon/:idcha', async (req, res) => {
     const dongho = await DongHo.findById(cha.lineage)
 
 
-    const newMember = new UserGiaPha(
+    const newMember = new UserGiaPha({
       name,
       nickname,
       sex,
@@ -287,7 +287,7 @@ router.post('/addcon/:idcha', async (req, res) => {
       address,
       hometown,
       bio,
-      dead);
+      dead});
 
     const user = await User.findOne(username);
 
