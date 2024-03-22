@@ -51,7 +51,7 @@ async function checkAndSendNotifications(userIdgiapha, userId) {
   }
 }
 //cây gia phả
-const buildFamilyTree = async (donghoId, memberId, generation = 1) => {
+const buildFamilyTree = async (donghoId, memberId) => {
   try {
     let member;
 
@@ -74,7 +74,7 @@ const buildFamilyTree = async (donghoId, memberId, generation = 1) => {
       name: member.name,
       date: member.date,
       dead: member.dead,
-      generation: generation,
+      relationship: member.relationship,
       con: []
     }
 
@@ -82,7 +82,7 @@ const buildFamilyTree = async (donghoId, memberId, generation = 1) => {
       for (const child of member.con) {
         if (child && child._id) {
           const userchild = await UserGiaPha.findById(child._id);
-          const childNode = await buildFamilyTree(userchild.lineage, child._id, generation + 1);
+          const childNode = await buildFamilyTree(userchild.lineage, child._id);
           console.log(childNode);
           if (childNode) {
             familyTreeNode.con.push(childNode);
@@ -106,14 +106,7 @@ router.get('/familyTree/:donghoId', async (req, res) => {
     const dongho = await DongHo.findById(donghoId);
     const firstUserId = dongho.userId.length > 0 ? dongho.userId[0]._id : null;
     const user = await User.findById(firstUserId);
-    const { key } = req.body;
-    if (!key) {
-      return res.status(404).json({ message: 'bạn chưa nhập key' })
-    }
-
-    if (key != dongho.key) {
-      return res.status(404).json({ message: 'bạn nhập sai key' })
-    }
+    
 
     let memberId = null
 
@@ -132,25 +125,6 @@ router.get('/familyTree/:donghoId', async (req, res) => {
   }
 })
 
-//hàm tính số đời của cây gia phả
-const countGenerations = (familyTree) => {
-  let maxGeneration = 1;
-
-  const traverseTree = (node, currentGeneration) => {
-    maxGeneration = Math.max(maxGeneration, currentGeneration);
-
-    if (node.con && Array.isArray(node.con)) { // Kiểm tra xem node.con tồn tại và có phải là một mảng không
-      for (const child of node.con) {
-        traverseTree(child, currentGeneration + 1);
-      }
-    }
-  };
-
-  traverseTree(familyTree, 1);
-
-  return maxGeneration;
-};
-
 router.get('/getdongho', async (req, res) => {
   try {
     const dongho = await DongHo.find().lean();
@@ -159,14 +133,14 @@ router.get('/getdongho', async (req, res) => {
         const familyTree = await buildFamilyTree(data._id);
         const firstUserId = data.userId.length > 0 ? data.userId[0]._id : null;
         const user = await User.findById(firstUserId);
-        const totalGenerations = countGenerations(familyTree);
+      
         return {
           _id: data._id,
           name: data.name,
           key: data.key,
           address: data.address,
           members: data.user ? data.user.length : 0,
-          generation: totalGenerations,
+          
           creator: {
             name: user ? user.hovaten : '', // Kiểm tra xem user có tồn tại không trước khi truy cập thuộc tính
             phone: user ? user.phone : '' // Kiểm tra xem user có tồn tại không trước khi truy cập thuộc tính
@@ -248,6 +222,7 @@ router.post('/addcon/:idcha', async (req, res) => {
       name,
       username,
       nickname,
+      relationship,
       sex,
       date,
       maritalstatus,
@@ -281,6 +256,7 @@ router.post('/addcon/:idcha', async (req, res) => {
       nickname,
       sex,
       date,
+      relationship,
       maritalstatus,
       academiclevel,
       job,

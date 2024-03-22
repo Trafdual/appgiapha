@@ -7,6 +7,7 @@ const usergiaphaSchema = new mongoose.Schema({
   avatar: { type: String },
   sex: { type: String },
   date: { type: String },
+  relationship: {type: String},
   maritalstatus: { type: String },
   phone: { type: String },
   academiclevel: { type: String },
