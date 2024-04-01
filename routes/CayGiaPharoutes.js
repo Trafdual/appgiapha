@@ -419,49 +419,58 @@ router.post('/addMember/:iddongho', async (req, res) => {
       return res.status(404).json({ error: 'Parent not found' })
     }
 
-
     const deaddateMoment = moment(deaddate, 'DD/MM/YYYY');
     const dateMoment = moment(date, 'DD/MM/YYYY');
     const lived = deaddateMoment.diff(dateMoment, 'years');
 
- 
+    const newMemberData = {
+      name: name,
+      nickname: nickname,
+      sex: sex,
+      date: date,
+      maritalstatus: maritalstatus,
+      academiclevel: academiclevel,
+      job: job,
+      address: address,
+      hometown: hometown,
+      bio: bio,
+      dead: dead
+    };
 
-    const newMember = new UserGiaPha(
-      name,
-      nickname,
-      sex,
-      date,
-      maritalstatus,
-      academiclevel,
-      job,
-      address,
-      hometown,
-      bio,
-      dead);
-
-      if (phone) {
-        if (!/^\d{10}$/.test(phone)) {
-          return res.status(400).json({ message: 'Số điện thoại không hợp lệ' });
-        }
-        newMember.phone = phone;
+    // Kiểm tra và thêm phone nếu có
+    if (phone) {
+      if (!/^\d{10}$/.test(phone)) {
+        return res.status(400).json({ message: 'Số điện thoại không hợp lệ' });
       }
-      const user = await User.findOne(username);
-
-      if (user) {
-        newMember.userId = user._id;
-        parent.userId.push(user._id)
-      }
-
-    if (newMember.dead == false) {
-      newMember.deadinfo = undefined;
-    } else {
-      newMember.deadinfo = { deaddate, lived, worshipaddress, worshipperson, burialaddress };
+      newMemberData.phone = phone;
     }
 
-    newMember.lineage = parent._id
+    // Tìm user và thêm userId nếu tồn tại
+    const user = await User.findOne(username);
+    if (user) {
+      newMemberData.userId = user._id;
+      parent.userId.push(user._id)
+    }
 
+    // Tạo một đối tượng mới của UserGiaPha với dữ liệu được xây dựng
+    const newMember = new UserGiaPha(newMemberData);
+
+    // Xử lý thông tin khi thành viên đã mất
+    if (newMember.dead) {
+      newMember.deadinfo = {
+        deaddate: deaddate,
+        lived: lived,
+        worshipaddress: worshipaddress,
+        worshipperson: worshipperson,
+        burialaddress: burialaddress
+      };
+    }
+
+    // Thiết lập quan hệ giữa thành viên mới và đơn vị cấp trên
+    newMember.lineage = parent._id
     parent.user.push(newMember._id)
 
+    // Lưu thành viên mới và đơn vị cấp trên
     await newMember.save()
     await parent.save()
 
@@ -471,6 +480,7 @@ router.post('/addMember/:iddongho', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' })
   }
 })
+
 
 router.post('/postdongho/:userId', async (req, res) => {
   try {
