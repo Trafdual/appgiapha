@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="google-site-verification" content="w8EqMC0tywLwLb7tQHtpOo506Dl-99uo2BkzYLiPDxo" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang Chủ</title>
+    <link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css">
+
+    <style>
+        .container {
+            /* background-color: bisque; */
+            max-width: 1200px;
+        }
+
+        .icon {
+            width: 30px;
+        }
+
+        .col-12 {
+            text-align: center;
+        }
+
+        .btn {
+            border-color: black;
+
+        }
+
+        .from {
+            margin-top: 100px;
+            border: 2px solid black;
+        }
+
+        .footer {
+            margin-top: 50px;
+            clear: both;
+            max-width: 1500px;
+            background-color: rgb(167, 166, 166);
+            text-align: center;
+            margin-left: 7px;
+            font-size: 20px;
+        }
+
+        .img_sp {
+            margin-top: 10px;
+            width: 60px;
+        }
+
+        .dautich {
+            width: 40px;
+        }
+
+        .tab {
+            overflow: hidden;
+            border: 1px solid #ccc;
+            background-color: #f1f1f1;
+            text-align: center;
+        }
+
+        /* Định dạng cho nút tab */
+        .tab button {
+            background-color: inherit;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            transition: 0.3s;
+        }
+
+        /* Thêm màu nền khi hover trên nút tab */
+        .tab button:hover {
+            background-color: #ddd;
+        }
+
+        /* Định dạng cho tab content */
+        .tabcontent {
+            display: none;
+            padding: 6px 12px;
+            border: 1px solid #ccc;
+            border-top: none;
+        }
+
+        /* Hiển thị tab content được chọn */
+        .show {
+            display: block;
+        }
+
+        .tablinks.active {
+            background-color: #b1afaf;
+            /* Đổi màu nền */
+        }
+
+        .dialog-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+        }
+
+        .dialog-content {
+            margin-top: 10%;
+            margin-left: auto;
+            /* Đặt margin-left thành auto để canh giữa */
+            margin-right: auto;
+            /* Đặt margin-right thành auto để canh giữa */
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 400px;
+            text-align: center;
+
+        }
+
+        .dialog-buttons {
+            margin-top: 2%;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="container">
+        <h2 style="text-align: center;">Home</h2>
+    </div>
+    <div class="tab">
+        <button class="tablinks active" onclick="openTab(event, 'Tab1')">Loại văn khấn</button>
+        <button class="tablinks" onclick="openTab(event, 'Tab2')">Xăm</button>
+        <button class="tablinks" onclick="openTab(event, 'Tab3')">Giấc mộng</button>
+
+    </div>
+    <!-- Nội dung của tab -->
+    <div id="Tab1" class="tabcontent show">
+        <div class="col-sm-4 col-md-2">
+            <button onclick="showSuccessDialog()" class="btn" style="background-color: rgb(255, 115, 0); color: white;"
+                href="">
+                ➕ Thêm loại văn khấn
+            </button>
+        </div>
+        <div class="col-1 col-sm-4 col-md-12">
+
+            <table class="table table-bordered table-striped" style="text-align: center;">
+                <tr>
+                    <th>ID</th>
+                    <th>Tên</th>
+                    <th>Chức năng</th>
+                </tr>
+
+                <% loaivankhan.forEach( ( row )=>{ %>
+
+                    <tr>
+                        <td class="td-id">
+                            <%= row._id%>
+                        </td>
+                        <td class="td-name">
+                            <%= row.name%>
+                        </td>
+
+                        <td>
+                            <button type="button" class="btn btn-light" onclick="showSuccessDialog2()">Sửa</button>
+
+                            <form action="/deleteloaivankhan/<%= row._id %>" method="post" id="deleteForm">
+                                <button type="button" class="btn btn-light" data-bs-toggle="modal"
+                                    data-bs-target="#deleteModal<%= row._id %>">
+                                    Xóa
+                                </button>
+
+                                <div class="modal fade" id="deleteModal<%= row._id %>" data-bs-keyboard="false"
+                                    aria-labelledby="staticBackdropLabel">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h1 class="modal-title fs-5" id="staticBackdropLabel">Chắc chắn muốn
+                                                    xóa?</h1>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                    aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary"
+                                                    data-bs-dismiss="modal">Không</button>
+                                                <button type="submit" class="btn btn-primary">Có</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+
+                            <div id="successDialog" class="dialog-overlay">
+                                <div class="dialog-content">
+                                    <h2>Loại Văn Khấn</h2>
+                                    <form action="/postloaivankhan" method="post">
+                                        <div class="d-flex flex-column">
+                                            <input style="width: 100%;font-size: 20px;" class="text-black "
+                                                placeholder="Tên loại văn khấn" name="name" >
+                                        </div>
+                                        <div class="dialog-buttons">
+                                            <button onclick="hideDialog()" class="btn btn-danger">Return</button>
+                                            <button type="submit" class="btn btn-primary">Post</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+
+                            <div id="successDialog2<%= row._id %>" class="dialog-overlay">
+                                <div class="dialog-content">
+                                    <h2>Sửa Loại Văn Khấn</h2>
+                                    <form action="/putloaivankhan/<%= row._id %>" method="post">
+                                        <div class="d-flex flex-column">
+                                            <input type="text" id="nameloaivk" style="width: 100%;font-size: 20px;"
+                                                class="text-black " placeholder="Tên loại văn khấn" name="name" value="<%= row.name%>">
+                                        </div>
+                                        <div class="dialog-buttons">
+                                            <button onclick="hideDialog2(`<%= row._id %>`)" class="btn btn-danger">Return</button>
+                                            <button type="submit" class="btn btn-primary">Put</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <script>
+                                function showSuccessDialog2() {
+                                    event.preventDefault();
+
+                                    var row = event.target.closest('tr');
+                                    if (!row) {
+                                        return;
+                                    }
+                                    var rowId = row.querySelector('.td-id').innerText;
+
+                                    // Tạo id của input dựa trên id của hàng
+                                    var inputId = 'successDialog2' + rowId;
+                                    var dialog = document.getElementById(inputId);
+                                    dialog.style.display = 'block';
+
+                                }
+
+                                function hideDialog2(id) {
+                                    // Ẩn dialog
+                                    event.preventDefault();
+                                    var inputId = 'successDialog2' + id;
+                                    var dialog = document.getElementById(inputId);
+                                    console.log(inputId)
+                                    dialog.style.display = 'none';
+                                }
+                            </script>
+
+                            <form action="" method="get">
+                                <button type="submit" class="btn btn-light">Văn Khấn</button>
+                            </form>
+                        </td>
+
+                    </tr>
+                    <% } ) %>
+
+            </table>
+
+        </div>
+    </div>
+
+    <div id="Tab2" class="tabcontent">
+        <div class="col-sm-4 col-md-2">
+            <button onclick="showSuccessDialogXam()" type="button" class="btn" style="background-color: rgb(255, 115, 0); color: white;">
+                ➕ Thêm Xăm
+            </button>
+        </div>
+        <div class="col-1 col-sm-4 col-md-12">
+
+            <table class="table table-bordered table-striped" style="text-align: center;">
+                <tr>
+                    <th>ID</th>
+                    <th>Tên</th>
+                    <th>Chức năng</th>
+                </tr>
+
+                <% xam.forEach( ( row )=>{ %>
+
+                    <tr>
+                        <td class="td-idzam">
+                            <%= row._id%>
+                        </td>
+                        <td>
+                            <%= row.name%>
+                        </td>
+
+                        <td>
+                            <button type="button" class="btn btn-light" onclick="showSuccessDialogxam2()">Sửa</button>
+
+                            <form action="/deleteloaivankhan/<%= row._id %>" method="post" id="deleteForm">
+                                <button type="button" class="btn btn-light" data-bs-toggle="modal"
+                                    data-bs-target="#deleteModal<%= row._id %>">
+                                    Xóa
+                                </button>
+
+                                <div class="modal fade" id="deleteModal<%= row._id %>" data-bs-keyboard="false"
+                                    aria-labelledby="staticBackdropLabel">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h1 class="modal-title fs-5" id="staticBackdropLabel">Chắc chắn muốn
+                                                    xóa?</h1>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                    aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary"
+                                                    data-bs-dismiss="modal">Không</button>
+                                                <button type="submit" class="btn btn-primary">Có</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+
+                            <div id="successDialogxam" class="dialog-overlay">
+                                <div class="dialog-content">
+                                    <h2>Loại Xăm</h2>
+                                    <form action="/postloaivankhan" method="post">
+                                        <div class="d-flex flex-column">
+                                            <input style="width: 100%;font-size: 20px;" class="text-black "
+                                                placeholder="Tên xăm" name="name" >
+                                        </div>
+                                        <div class="dialog-buttons">
+                                            <button onclick="hideDialogxam()" class="btn btn-danger">Return</button>
+                                            <button type="submit" class="btn btn-primary">Post</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+
+                            <div id="successDialogxam2<%= row._id %>" class="dialog-overlay">
+                                <div class="dialog-content">
+                                    <h2>Sửa Xăm</h2>
+                                    <form action="/putloaivankhan/<%= row._id %>" method="post">
+                                        <div class="d-flex flex-column">
+                                            <input type="text" id="nameloaivk" style="width: 100%;font-size: 20px;"
+                                                class="text-black " placeholder="Tên xăm" name="name" value="<%= row.name%>">
+                                        </div>
+                                        <div class="dialog-buttons">
+                                            <button onclick="hideDialog2xam()" class="btn btn-danger">Return</button>
+                                            <button type="submit" class="btn btn-primary">Put</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <script>
+                                function showSuccessDialogxam2() {
+                                    event.preventDefault();
+
+                                    var row = event.target.closest('tr');
+                                    if (!row) {
+                                        return;
+                                    }
+                                    var rowId = row.querySelector('.td-idzam').innerText;
+
+                                    // Tạo id của input dựa trên id của hàng
+                                    var inputId = 'successDialogxam2' + rowId;
+                                    var dialog = document.getElementById(inputId);
+                                    dialog.style.display = 'block';
+
+                                }
+
+                                function hideDialog2xam() {
+                                    // Ẩn dialog
+                                    event.preventDefault();
+                                    var inputId = 'successDialogxam2' + `<%= row._id %>`;
+                                    var dialog = document.getElementById(inputId);
+                                    console.log(inputId)
+                                    dialog.style.display = 'none';
+                                }
+                            </script>
+
+                            <form action="" method="get">
+                                <button type="submit" class="btn btn-light">Quẻ bói</button>
+                            </form>
+                        </td>
+                    </tr>
+                    <% } ) %>
+
+            </table>
+
+        </div>
+    </div>
+
+    <div id="Tab3" class="tabcontent">
+        <div class="col-sm-4 col-md-2">
+            <button onclick="showSuccessDialoggiacmong()" type="button" class="btn" style="background-color: rgb(255, 115, 0); color: white;" >
+                ➕ Thêm giấc mộng
+            </button>
+        </div>
+        <div class="col-1 col-sm-4 col-md-12">
+
+            <table class="table table-bordered table-striped" style="text-align: center;">
+                <tr>
+                    <th>ID</th>
+                    <th>Tên</th>
+                    <th>Nội dung</th>
+                    <th>Chức năng</th>
+                </tr>
+
+                <% giacmong.forEach( ( row )=>{ %>
+
+                    <tr>
+                        <td class="td-idgiacmong">
+                            <%= row._id%>
+                        </td>
+                        <td class="td-namegiacmong">
+                            <%= row.name%>
+                        </td>
+                        <td class="td-idnoidunggm">
+                            <%= row.description%>
+                        </td>
+
+                        <td>
+                            <button type="button" class="btn btn-light" onclick="showSuccessDialoggiacmong2()">Sửa</button>
+
+                            <form action="/dreamsdelete/<%= row._id %>" method="post" id="deleteForm">
+                                <button type="button" class="btn btn-light" data-bs-toggle="modal"
+                                    data-bs-target="#deleteModal<%= row._id %>">
+                                    Xóa
+                                </button>
+
+                                <div class="modal fade" id="deleteModal<%= row._id %>" data-bs-keyboard="false"
+                                    aria-labelledby="staticBackdropLabel">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h1 class="modal-title fs-5" id="staticBackdropLabel">Chắc chắn muốn
+                                                    xóa?</h1>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                    aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary"
+                                                    data-bs-dismiss="modal">Không</button>
+                                                <button type="submit" class="btn btn-primary">Có</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+
+                            <div id="successDialoggiacmong" class="dialog-overlay">
+                                <div class="dialog-content">
+                                    <h2>Giấc mộng</h2>
+                                    <form action="/dreams" method="post">
+                                        <div class="d-flex flex-column">
+                                            <input style="width: 100%;font-size: 15px;" class="text-black "
+                                                placeholder="Tên giấc mộng" name="name" >
+                                                <textarea style="width: 100%;font-size: 15px; margin-top: 2%; height: 200%;" class="text-black "
+                                                placeholder="Nội dung" name="description"></textarea>
+                                        </div>
+                                        <div class="dialog-buttons">
+                                            <button onclick="hideDialoggiacmong()" class="btn btn-danger">Return</button>
+                                            <button type="submit" class="btn btn-primary">Post</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+
+                            <div id="successDialog2giacmong<%= row._id %>" class="dialog-overlay">
+                                <div class="dialog-content">
+                                    <h2>Sửa Giấc Mộng</h2>
+                                    <form action="/<%= row._id %>" method="post">
+                                        <div class="d-flex flex-column">
+                                            <input style="width: 100%;font-size: 15px;" class="text-black "
+                                                placeholder="Tên giấc mộng" name="name" value="<%= row.name%>" >
+                                                <textarea style="width: 100%;font-size: 15px; margin-top: 2%; height: 200%;" class="text-black "
+                                                placeholder="Nội dung" name="description"><%= row.description%></textarea>
+                                        </div>
+                                        <div class="dialog-buttons">
+                                            <button onclick="hideDialog2giacmong('<%= row._id %>')" class="btn btn-danger">Return</button>
+                                            <button type="submit" class="btn btn-primary">Put</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <script>
+                                function showSuccessDialoggiacmong2() {
+                                    event.preventDefault();
+
+                                    var row = event.target.closest('tr');
+                                    if (!row) {
+                                        return;
+                                    }
+                                    var rowId = row.querySelector('.td-idgiacmong').innerText;
+
+                                    // Tạo id của input dựa trên id của hàng
+                                    var inputId = 'successDialog2giacmong' + rowId;
+                                    var dialog = document.getElementById(inputId);
+                                    dialog.style.display = 'block';
+
+                                }
+
+                                function hideDialog2giacmong(id) {
+                                    // Ẩn dialog
+                                    event.preventDefault();
+                                    var inputId = 'successDialog2giacmong' + id;
+                                    var dialog = document.getElementById(inputId);
+                                    dialog.style.display = 'none';
+                                }
+                            </script>
+                        </td>
+                    </tr>
+                    <% } ) %>
+
+            </table>
+
+        </div>
+    </div>
+    </div>
+    <script>
+        function showSuccessDialog() {
+            event.preventDefault();
+            // Hiển thị dialog thành công
+            var dialog = document.getElementById('successDialog');
+            dialog.style.display = 'block';
+        }
+
+        function hideDialog() {
+            // Ẩn dialog
+            event.preventDefault();
+            var dialog = document.getElementById('successDialog');
+            dialog.style.display = 'none';
+        }
+
+        function showSuccessDialogXam() {
+            event.preventDefault();
+            // Hiển thị dialog thành công
+            var dialog = document.getElementById('successDialogxam');
+            dialog.style.display = 'block';
+        }
+
+        function hideDialogxam() {
+            // Ẩn dialog
+            event.preventDefault();
+            var dialog = document.getElementById('successDialogxam');
+            dialog.style.display = 'none';
+        }
+
+        function showSuccessDialoggiacmong() {
+            event.preventDefault();
+            // Hiển thị dialog thành công
+            var dialog = document.getElementById('successDialoggiacmong');
+            dialog.style.display = 'block';
+        }
+
+        function hideDialoggiacmong() {
+            // Ẩn dialog
+            event.preventDefault();
+            var dialog = document.getElementById('successDialoggiacmong');
+            dialog.style.display = 'none';
+        }
+
+
+        // JavaScript để điều khiển sự kiện khi click vào tab
+        function openTab(evt, tabName) {
+            // Lấy tất cả các tab buttons
+            var tabButtons = document.getElementsByClassName("tablinks");
+
+            // Xóa lớp active từ tất cả các tab buttons
+            for (var i = 0; i < tabButtons.length; i++) {
+                tabButtons[i].classList.remove("active");
+            }
+
+            // Thêm lớp active cho tab button được chọn
+            evt.currentTarget.classList.add("active");
+
+            // Ẩn tất cả các tab content
+            var tabContents = document.getElementsByClassName("tabcontent");
+            for (var i = 0; i < tabContents.length; i++) {
+                tabContents[i].style.display = "none";
+            }
+
+            // Hiển thị tab content tương ứng với tab button được chọn
+            document.getElementById(tabName).style.display = "block";
+        }
+    </script>
+    <script src="/bootstrap/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

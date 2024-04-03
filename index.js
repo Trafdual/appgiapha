@@ -13,6 +13,9 @@ const vankhanroute = require('./routes/VanKhanRoutes');
 const eventroute = require('./routes/EventRoutes');
 const giaimongroute = require('./routes/GiacMongRoutes');
 const quexamroute=require('./routes/QueXamRoutes');
+const homeroutes=require('./routes/Homeroutes')
+var path = require('path');
+
 
 var app = express();
 app.use(methodOverride('_method'));
@@ -33,6 +36,10 @@ const mongoStoreOptions = {
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'ejs');
+app.use(express.static(path.join(__dirname, '/public')));
+
 
 app.use(session({
   secret: 'mysecretkey',
@@ -52,6 +59,7 @@ app.use('/', vankhanroute);
 app.use('/', eventroute);
 app.use('/', giaimongroute);
 app.use('/', quexamroute);
+app.use('/',homeroutes);
 
 
 app.listen(8080, () => {

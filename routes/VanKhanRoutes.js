@@ -1,13 +1,12 @@
 const router = require("express").Router();
 const VanKhan = require("../models/VanKhanModel");
 const LoaiVanKhan = require("../models/LoaiVanKhanModel");
-
 router.post('/postloaivankhan', async (req, res) => {
     try {
         const { name } = req.body;
         const loaivankhan = new LoaiVanKhan({ name });
         await loaivankhan.save();
-        res.json(loaivankhan);
+        res.redirect('/home');
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Đã xảy ra lỗi.' });
@@ -25,12 +24,28 @@ router.post('/putloaivankhan/:idloaivankhan', async (req, res) => {
         loaivankhan.name = name;
         await loaivankhan.save();
 
-        res.json({ message: 'Cập nhật thành công.' });
+        res.redirect('/home');
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Đã xảy ra lỗi.' });
     }
 });
+
+router.post('/deleteloaivankhan/:id',async(req,res)=>{
+    try {
+        const idloaivankhan = req.params.id;
+        const loaivankhan = await LoaiVanKhan.findById(idloaivankhan);
+
+        await Promise.all(loaivankhan.vankhan.map(async(vk)=>{
+            await VanKhan.findByIdAndDelete(vk._id);
+        }))
+        await loaivankhan.deleteOne({_id:idloaivankhan});
+        res.redirect('/home')
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Đã xảy ra lỗi.' });
+    }
+})
 
 router.get('/getloaivankhan', async (req, res) => {
     try {

@@ -34,7 +34,7 @@ router.post('/dreams', async (req, res) => {
         const newDream = new Dream({ name, description });
         await newDream.save();
 
-        res.json(newDream);
+        res.redirect('/home')
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Đã xảy ra lỗi khi thêm giấc mộng mới.' });
@@ -42,7 +42,7 @@ router.post('/dreams', async (req, res) => {
 });
 
 // Sửa thông tin giấc mộng
-router.put('/dreams/:id', async (req, res) => {
+router.post('/dreams/:id', async (req, res) => {
     try {
         const { name, description } = req.body;
         const updatedDream = await Dream.findByIdAndUpdate(req.params.id, { name, description }, { new: true });
@@ -51,7 +51,7 @@ router.put('/dreams/:id', async (req, res) => {
             return res.status(404).json({ message: 'Không tìm thấy giấc mộng để sửa.' });
         }
 
-        res.json(updatedDream);
+        res.redirect('/home')
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Đã xảy ra lỗi khi sửa thông tin giấc mộng.' });
@@ -59,7 +59,7 @@ router.put('/dreams/:id', async (req, res) => {
 });
 
 // Xóa giấc mộng
-router.delete('/dreams/:id', async (req, res) => {
+router.post('/dreamsdelete/:id', async (req, res) => {
     try {
         // Xóa giấc mộng
         const deletedDream = await Dream.findByIdAndDelete(req.params.id);
@@ -67,7 +67,7 @@ router.delete('/dreams/:id', async (req, res) => {
         if (!deletedDream) {
             return res.status(404).json({ message: 'Không tìm thấy giấc mộng để xóa.' });
         }
-        res.json({ message: 'Xóa giấc mộng thành công.' });
+        res.redirect('/home')
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Đã xảy ra lỗi khi xóa giấc mộng.' });

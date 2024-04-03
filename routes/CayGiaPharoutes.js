@@ -33,7 +33,7 @@ async function checkAndSendNotifications(userIdgiapha, userId) {
           to: user.fcmToken,
           notification: {
             title: 'Thông báo',
-            body: `Đến ngày giỗ của ${usergiapha.name}. Mong bạn bớt một chút thời gian để tưởng nhớ`,
+            body: `Đến ngày giỗ của ${usergiapha.name}. Mong bạn bớt một chút thời gian để tưởng nhớ người đã khuất`,
           },
         };
 
@@ -73,6 +73,7 @@ const buildFamilyTree = async (donghoId, memberId) => {
       _id: member._id,
       name: member.name,
       date: member.date,
+      avatar: member.avatar || '',
       dead: member.dead,
       relationship: member.relationship,
       con: []
@@ -106,7 +107,7 @@ router.get('/familyTree/:donghoId', async (req, res) => {
     const dongho = await DongHo.findById(donghoId);
     const firstUserId = dongho.userId.length > 0 ? dongho.userId[0]._id : null;
     const user = await User.findById(firstUserId);
-    
+
 
     let memberId = null
 
@@ -114,7 +115,8 @@ router.get('/familyTree/:donghoId', async (req, res) => {
     const familydata = {
       creator: {
         name: user.hovaten,
-        phone: user.phone
+        phone: user.phone,
+        namegiapha: dongho.name
       },
       familyTreeJSON
     }
@@ -133,14 +135,14 @@ router.get('/getdongho', async (req, res) => {
         const familyTree = await buildFamilyTree(data._id);
         const firstUserId = data.userId.length > 0 ? data.userId[0]._id : null;
         const user = await User.findById(firstUserId);
-      
+
         return {
           _id: data._id,
           name: data.name,
           key: data.key,
           address: data.address,
           members: data.user ? data.user.length : 0,
-          
+
           creator: {
             name: user ? user.hovaten : '', // Kiểm tra xem user có tồn tại không trước khi truy cập thuộc tính
             phone: user ? user.phone : '' // Kiểm tra xem user có tồn tại không trước khi truy cập thuộc tính
@@ -215,7 +217,7 @@ router.post('/joindongho/:donghoId/:userId', async (req, res) => {
 })
 
 
-router.post('/addcon/:idcha', async (req, res) => {
+router.post('/addcon/:idcha', upload.single('avatar'), async (req, res) => {
   try {
     const idcha = req.params.idcha
     const {
@@ -236,9 +238,9 @@ router.post('/addcon/:idcha', async (req, res) => {
       deaddate,
       worshipaddress,
       worshipperson,
-      burialaddress
+      burialaddress,
     } = req.body
-
+    const avatar = req.file.buffer.toString('base64');
     const cha = await UserGiaPha.findById(idcha)
     if (!cha) {
       return res.status(404).json({ error: 'Parent not found' })
@@ -263,7 +265,9 @@ router.post('/addcon/:idcha', async (req, res) => {
       address,
       hometown,
       bio,
-      dead});
+      dead,
+      avatar
+    });
 
     const user = await User.findOne(username);
 
@@ -375,6 +379,7 @@ router.get('/getmember/:userId', async (req, res) => {
       bio: member.bio,
       dead: member.dead,
       lineage: member.lineage,
+      avatar: member.avatar
     }
 
     if (userdata.dead == false) {
@@ -391,7 +396,7 @@ router.get('/getmember/:userId', async (req, res) => {
 })
 
 
-router.post('/addMember/:iddongho', async (req, res) => {
+router.post('/addMember/:iddongho', upload.single('avatar'), async (req, res) => {
   try {
     const iddongho = req.params.iddongho
     const {
@@ -411,9 +416,10 @@ router.post('/addMember/:iddongho', async (req, res) => {
       deaddate,
       worshipaddress,
       worshipperson,
-      burialaddress
-    } = req.body
+      burialaddress,
 
+    } = req.body
+    const avatar = req.file.buffer.toString('base64');
     const parent = await DongHo.findById(iddongho)
     if (!parent) {
       return res.status(404).json({ error: 'Parent not found' })
@@ -434,7 +440,8 @@ router.post('/addMember/:iddongho', async (req, res) => {
       address: address,
       hometown: hometown,
       bio: bio,
-      dead: dead
+      dead: dead,
+      avatar: avatar
     };
 
     // Kiểm tra và thêm phone nếu có
