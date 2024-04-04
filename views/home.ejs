@@ -253,7 +253,7 @@
                                 }
                             </script>
 
-                            <form action="" method="get">
+                            <form action="/vankhanview/<%= row._id %>" method="get">
                                 <button type="submit" class="btn btn-light">Văn Khấn</button>
                             </form>
                         </td>
@@ -294,7 +294,7 @@
                         <td>
                             <button type="button" class="btn btn-light" onclick="showSuccessDialogxam2()">Sửa</button>
 
-                            <form action="/deleteloaivankhan/<%= row._id %>" method="post" id="deleteForm">
+                            <form action="/deletexam/<%= row._id %>" method="post" id="deleteForm">
                                 <button type="button" class="btn btn-light" data-bs-toggle="modal"
                                     data-bs-target="#deleteModal<%= row._id %>">
                                     Xóa
@@ -323,7 +323,7 @@
                             <div id="successDialogxam" class="dialog-overlay">
                                 <div class="dialog-content">
                                     <h2>Loại Xăm</h2>
-                                    <form action="/postloaivankhan" method="post">
+                                    <form action="/xam" method="post">
                                         <div class="d-flex flex-column">
                                             <input style="width: 100%;font-size: 20px;" class="text-black "
                                                 placeholder="Tên xăm" name="name" >
@@ -340,7 +340,7 @@
                             <div id="successDialogxam2<%= row._id %>" class="dialog-overlay">
                                 <div class="dialog-content">
                                     <h2>Sửa Xăm</h2>
-                                    <form action="/putloaivankhan/<%= row._id %>" method="post">
+                                    <form action="/updatexam/<%= row._id %>" method="post">
                                         <div class="d-flex flex-column">
                                             <input type="text" id="nameloaivk" style="width: 100%;font-size: 20px;"
                                                 class="text-black " placeholder="Tên xăm" name="name" value="<%= row.name%>">
@@ -380,7 +380,7 @@
                                 }
                             </script>
 
-                            <form action="" method="get">
+                            <form action="/queboiview/<%= row._id %>" method="get">
                                 <button type="submit" class="btn btn-light">Quẻ bói</button>
                             </form>
                         </td>
@@ -472,7 +472,7 @@
                             <div id="successDialog2giacmong<%= row._id %>" class="dialog-overlay">
                                 <div class="dialog-content">
                                     <h2>Sửa Giấc Mộng</h2>
-                                    <form action="/<%= row._id %>" method="post">
+                                    <form action="/dreams/<%= row._id %>" method="post">
                                         <div class="d-flex flex-column">
                                             <input style="width: 100%;font-size: 15px;" class="text-black "
                                                 placeholder="Tên giấc mộng" name="name" value="<%= row.name%>" >

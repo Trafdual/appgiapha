@@ -9,7 +9,7 @@ router.post('/xam', async (req, res) => {
         const { name } = req.body
         const xam = new Xam({ name });
         await xam.save();
-        res.json(xam);
+        res.redirect('/home');
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: `Đã xảy ra lỗi: ${error}` });
@@ -44,7 +44,7 @@ router.post('/deletexam/:idxam', async (req, res) => {
             await Queboi.findByIdAndDelete(queboi._id);
         }));
         await Xam.deleteOne({_id:idxam});
-        res.json({ message: "Xăm đã được xóa thành công." });
+        res.redirect('/home');
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: `Đã xảy ra lỗi: ${error}` });
@@ -59,7 +59,7 @@ router.post('/updatexam/:idxam',async(req,res)=>{
         if (!xam) {
             res.status(403).json({ message: 'khong tim thay xam' })
         }
-        res.json({message:"update thành công"});
+        res.redirect('/home');
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: `Đã xảy ra lỗi: ${error}` });
@@ -70,9 +70,6 @@ router.post('/postqueboi/:idxam', async (req, res) => {
     try {
         const idxam = req.params.idxam;
         const { nameque, content } = req.body;
-        if (isNaN(nameque)) {
-            return res.status(400).json({ message: 'nameque phải là số' });
-        }
         const queboi = new Queboi({ nameque, content,idxam });
         const xam = await Xam.findById(idxam);
         if (!xam) {
@@ -81,7 +78,7 @@ router.post('/postqueboi/:idxam', async (req, res) => {
         xam.queboi.push(queboi._id);
         await queboi.save();
         await xam.save();
-        res.json(queboi);
+        res.redirect(`/queboiview/${idxam}`)
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: `Đã xảy ra lỗi: ${error}` });
@@ -128,7 +125,8 @@ router.post('/deletequeboi/:idque', async (req, res) => {
             { new: true }
         );
 
-        res.json({ message: "Quẻ bói đã được xóa thành công." });
+        res.redirect(`/queboiview/${queboi.idxam}`)
+
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: `Đã xảy ra lỗi: ${error}` });
@@ -151,7 +149,7 @@ router.post('/updatequeboi/:idque',async(req,res)=>{
         if (!queboi) {
             return res.status(404).json({ message: "Không tìm thấy quẻ bói." });
         }
-        res.json(queboi)
+        res.redirect(`/queboiview/${queboi.idxam}`)
 
     } catch (error) {
         console.error(error);
