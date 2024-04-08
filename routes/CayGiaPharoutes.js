@@ -153,7 +153,7 @@ router.get('/getdongho', async (req, res) => {
       }
     }));
 
-    res.json(donghodata.filter(Boolean)); // Lọc bỏ các giá trị null khỏi mảng
+    res.json(donghodata); // Lọc bỏ các giá trị null khỏi mảng
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
