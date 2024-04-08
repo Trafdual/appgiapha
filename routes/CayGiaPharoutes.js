@@ -132,7 +132,6 @@ router.get('/getdongho', async (req, res) => {
     const dongho = await DongHo.find().lean();
     const donghodata = dongho.map(async (data) => {
       if (data && data._id) {
-        const familyTree = await buildFamilyTree(data._id);
         const firstUserId = data.userId.length > 0 ? data.userId[0]._id : null;
         const user = await User.findById(firstUserId);
 
