@@ -130,7 +130,7 @@ router.get('/familyTree/:donghoId', async (req, res) => {
 router.get('/getdongho', async (req, res) => {
   try {
     const dongho = await DongHo.find().lean();
-    const donghodata = dongho.map(async (data) => {
+    const donghodata = await Promise.all(dongho.map(async (data) => {
       if (data && data._id) {
         const firstUserId = data.userId.length > 0 ? data.userId[0]._id : null;
         const user = await User.findById(firstUserId);
@@ -151,10 +151,9 @@ router.get('/getdongho', async (req, res) => {
         console.error(`Error building family tree: DongHo data is null or missing _id.`);
         return null;
       }
-    });
+    }));
 
-    const resolvedDonghoData = await Promise.all(donghodata);
-    res.json(resolvedDonghoData.filter(Boolean)); // Lọc bỏ các giá trị null khỏi mảng
+    res.json(donghodata.filter(Boolean)); // Lọc bỏ các giá trị null khỏi mảng
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
