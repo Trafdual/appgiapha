@@ -61,8 +61,8 @@ app.use('/', giaimongroute);
 app.use('/', quexamroute);
 app.use('/',homeroutes);
 
-
-app.listen(8080, () => {
+const port=process.env.PORT || 8080
+app.listen(port, () => {
   try {
     console.log('kết nối thành công 8080')
   } catch (error) {
