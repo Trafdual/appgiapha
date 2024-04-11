@@ -53,17 +53,10 @@ async function checkAndSendNotifications(userIdgiapha, userId) {
 //cây gia phả
 const buildFamilyTree = async (donghoId, memberId) => {
   try {
-    let member;
-
-    const dongho = await DongHo.findById(donghoId);
+    const dongho = await DongHo.findById(donghoId).populate('user');
     const firstUserId = dongho.user.length > 0 ? dongho.user[0]._id : null;
-    if (!memberId) {
-      member = await UserGiaPha.findById(firstUserId);
-      console.log(member);
-    } else {
-      member = await UserGiaPha.findById(memberId);
-      console.log(member);
-    }
+
+    const member = !memberId ? await UserGiaPha.findById(firstUserId) : await UserGiaPha.findById(memberId);
 
     if (!member) {
       return [];
@@ -77,41 +70,37 @@ const buildFamilyTree = async (donghoId, memberId) => {
       dead: member.dead,
       relationship: member.relationship,
       con: []
-    }
+    };
 
     if (member.con && member.con.length > 0) {
-      for (const child of member.con) {
+      const childPromises = member.con.map(async (child) => {
         if (child && child._id) {
           const userchild = await UserGiaPha.findById(child._id);
           const childNode = await buildFamilyTree(userchild.lineage, child._id);
-          console.log(childNode);
-          if (childNode) {
-            familyTreeNode.con.push(childNode);
+          if (childNode.length > 0) {
+            familyTreeNode.con.push(childNode[0]);
           }
         }
-      }
+      });
+      await Promise.all(childPromises);
     }
 
     return [familyTreeNode];
   } catch (error) {
-    console.error(
-      `Error building family tree for member ${memberId}: ${error.message}`
-    )
+    console.error(`Error building family tree for member ${memberId}: ${error.message}`);
+    return [];
   }
-}
+};
 
 router.get('/familyTree/:donghoId', async (req, res) => {
   try {
     const donghoId = req.params.donghoId;
 
-    const dongho = await DongHo.findById(donghoId);
+    const dongho = await DongHo.findById(donghoId).populate('userId');
     const firstUserId = dongho.userId.length > 0 ? dongho.userId[0]._id : null;
     const user = await User.findById(firstUserId);
 
-
-    let memberId = null
-
-    const familyTreeJSON = await buildFamilyTree(donghoId, memberId);
+    const familyTreeJSON = await buildFamilyTree(donghoId, null);
     const familydata = {
       creator: {
         name: user.hovaten,
@@ -119,13 +108,14 @@ router.get('/familyTree/:donghoId', async (req, res) => {
         namegiapha: dongho.name
       },
       familyTreeJSON
-    }
+    };
+
     res.json(familydata);
   } catch (error) {
-    console.error(error)
-    res.status(500).json({ error: 'Internal Server Error' })
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
-})
+});
 
 router.get('/getdongho', async (req, res) => {
   try {
