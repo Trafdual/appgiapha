@@ -305,6 +305,70 @@ router.post('/addcon/:idcha', upload.single('avatar'), async (req, res) => {
   }
 })
 
+router.post('/editcon/:idcon',upload.single('avatar'),async(req,res)=>{
+  try {
+    const idcon = req.params.idcon
+    const {
+      name,
+      nickname,
+      relationship,
+      sex,
+      date,
+      maritalstatus,
+      phone,
+      academiclevel,
+      job,
+      address,
+      hometown,
+      bio,
+      dead,
+      deaddate,
+      worshipaddress,
+      worshipperson,
+      burialaddress,
+    } = req.body
+    const avatar = 'http://localhost:8080/meo1.jpg';
+    const con = await UserGiaPha.findById(idcon)
+    con.name=name;
+    con.nickname=nickname;
+    con.relationship=relationship;
+    con.sex=sex;
+    con.maritalstatus=maritalstatus;
+    con.academiclevel=academiclevel;
+    con.job=job;
+    con.address=address;
+    con.hometown=hometown;
+    con.bio=bio;
+    con.dead=dead;
+    con.avatar=avatar;
+    if (!con) {
+      return res.status(404).json({ error: 'Parent not found' })
+    }
+
+    const deaddateMoment = moment(deaddate, 'DD/MM/YYYY');
+    const dateMoment = moment(date, 'DD/MM/YYYY');
+    const lived = deaddateMoment.diff(dateMoment, 'years');
+
+
+    if (phone) {
+      if (!/^\d{10}$/.test(phone)) {
+        return res.status(400).json({ message: 'Số điện thoại không hợp lệ' });
+      }
+      con.phone = phone;
+    }
+
+    if (con.dead == false) {
+      con.deadinfo = undefined;
+    } else {
+      con.deadinfo = { deaddate, lived, worshipaddress, worshipperson, burialaddress };
+    }
+    res.json(con);
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Internal Server Error' })
+  }
+})
+
 router.get('/gettenUser/:donghoId', async (req, res) => {
   try {
     const donghoId = req.params.donghoId;
