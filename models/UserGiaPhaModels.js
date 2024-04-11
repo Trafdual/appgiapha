@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-
+const leanVirtual = require('mongoose-lean-virtuals');
 const usergiaphaSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'user' },
   name: { type: String },
@@ -27,5 +27,6 @@ const usergiaphaSchema = new mongoose.Schema({
   con:[{type: mongoose.Schema.Types.ObjectId, ref: 'usergiapha' }]
 });
 
+usergiaphaSchema.plugin(leanVirtual);
 const UserGiaPha = mongoose.model('usergiapha', usergiaphaSchema);
 module.exports = UserGiaPha;

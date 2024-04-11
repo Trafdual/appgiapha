@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-
+const leanVirtuals = require('mongoose-lean-virtuals');
 const userSchema = new mongoose.Schema({
   success: { type: Boolean, enum: [true], default: true },
   username: { type: String, required: true, unique: true },
@@ -21,6 +21,7 @@ const userSchema = new mongoose.Schema({
   }],
   fcmToken:[{ type:String }]
 });
+userSchema.plugin(leanVirtuals)
 
 const User = mongoose.model('user', userSchema);
 module.exports = User;

@@ -99,7 +99,6 @@ router.get('/familyTree/:donghoId', async (req, res) => {
     const dongho = await DongHo.findById(donghoId).populate('userId');
     const firstUserId = dongho.userId.length > 0 ? dongho.userId[0]._id : null;
     const user = await User.findById(firstUserId);
-
     const familyTreeJSON = await buildFamilyTree(donghoId, null);
     const familydata = {
       creator: {
