@@ -118,31 +118,23 @@ router.get('/familyTree/:donghoId', async (req, res) => {
 
 router.get('/getdongho', async (req, res) => {
   try {
-    const dongho = await DongHo.find().lean();
-    const donghodata = await Promise.all(dongho.map(async (data) => {
-      if (data && data._id) {
-        const firstUserId = data.userId.length > 0 ? data.userId[0]._id : null;
-        const user = await User.findById(firstUserId);
+    const dongho = await DongHo.find().populate('userId').lean();
 
-        return {
-          _id: data._id,
-          name: data.name,
-          key: data.key,
-          address: data.address,
-          members: data.user ? data.user.length : 0,
-
-          creator: {
-            name: user ? user.hovaten : '', // Kiểm tra xem user có tồn tại không trước khi truy cập thuộc tính
-            phone: user ? user.phone : '' // Kiểm tra xem user có tồn tại không trước khi truy cập thuộc tính
-          }
-        }
-      } else {
-        console.error(`Error building family tree: DongHo data is null or missing _id.`);
-        return null;
+    const donghodata = dongho.map(data => ({
+      _id: data._id,
+      name: data.name,
+      key: data.key,
+      address: data.address,
+      members: data.userId ? data.userId.length : 0,
+      creator: {
+        name: data.userId?.[0]?.hovaten || '', // Sử dụng optional chaining operator
+        phone: data.userId?.[0]?.phone || '' // Sử dụng optional chaining operator
       }
     }));
 
-    res.json(donghodata); // Lọc bỏ các giá trị null khỏi mảng
+    const filteredDonghoData = donghodata.filter(data => data !== null); // Loại bỏ các giá trị null khỏi mảng
+
+    res.json(filteredDonghoData);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
