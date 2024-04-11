@@ -362,6 +362,7 @@ router.post('/editcon/:idcon',upload.single('avatar'),async(req,res)=>{
     } else {
       con.deadinfo = { deaddate, lived, worshipaddress, worshipperson, burialaddress };
     }
+    await con.save();
     res.json(con);
   } catch (error) {
     console.error(error)
