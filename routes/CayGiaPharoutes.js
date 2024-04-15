@@ -51,6 +51,7 @@ async function checkAndSendNotifications(userIdgiapha, userId) {
   }
 }
 //cây gia phả
+
 const buildFamilyTree = async (donghoId, memberId) => {
   try {
     const dongho = await DongHo.findById(donghoId).populate('user');
@@ -70,27 +71,28 @@ const buildFamilyTree = async (donghoId, memberId) => {
       dead: member.dead,
       relationship: member.relationship,
       con: []
-    };
+    }
 
     if (member.con && member.con.length > 0) {
-      const childPromises = member.con.map(async (child) => {
+      for (const child of member.con) {
         if (child && child._id) {
           const userchild = await UserGiaPha.findById(child._id);
           const childNode = await buildFamilyTree(userchild.lineage, child._id);
-          if (childNode.length > 0) {
-            familyTreeNode.con.push(childNode[0]);
+          console.log(childNode);
+          if (childNode) {
+            familyTreeNode.con.push(childNode);
           }
         }
-      });
-      await Promise.all(childPromises);
+      }
     }
 
     return [familyTreeNode];
   } catch (error) {
-    console.error(`Error building family tree for member ${memberId}: ${error.message}`);
-    return [];
+    console.error(
+      `Error building family tree for member ${memberId}: ${error.message}`
+    )
   }
-};
+}
 
 router.get('/familyTree/:donghoId', async (req, res) => {
   try {
