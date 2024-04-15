@@ -74,16 +74,16 @@ const buildFamilyTree = async (donghoId, memberId) => {
     }
 
     if (member.con && member.con.length > 0) {
-      for (const child of member.con) {
+           const childPromises = member.con.map(async (child) => {
         if (child && child._id) {
           const userchild = await UserGiaPha.findById(child._id);
           const childNode = await buildFamilyTree(userchild.lineage, child._id);
-          console.log(childNode);
-          if (childNode) {
+          if (childNode.length > 0) {
             familyTreeNode.con.push(childNode);
           }
         }
-      }
+      });
+      await Promise.all(childPromises);
     }
 
     return [familyTreeNode];
