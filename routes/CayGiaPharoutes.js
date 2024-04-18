@@ -8,16 +8,9 @@ const moment = require('moment');
 const fs = require('fs');
 const AWS = require('aws-sdk');
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/'); 
-  },
-  filename: function (req, file, cb) {
-    cb(null,file.originalname);
-  }
+const upload = multer({
+  storage: multer.memoryStorage(), // Sử dụng lưu trữ trong bộ nhớ
 });
-
-const upload = multer({ storage: storage });
 
 const FCM = require('fcm-node');
 
@@ -505,6 +498,10 @@ router.post('/addMember/:iddongho',upload.single('avatar') ,async (req, res) => 
       worshipperson,
       burialaddress,
     } = req.body
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
     const avatar=req.file.filename;
     const avatarpath=await uploadAvatarToS3(req.file.path,avatar); 
     // Tạo một object chứa dữ liệu mới của thành viên
