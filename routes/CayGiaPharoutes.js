@@ -25,13 +25,12 @@ else console.log(data)
 })
 
 const uploadAvatarToS3 = async (avatarPath,avatarName) => {
-  const fileContent = fs.readFileSync(avatarPath);
 
   // Cấu hình tham số cho việc tải lên
   const params = {
     Bucket: 'giapha',
     Key: avatarName,
-    Body: fileContent
+    Body: avatarPath
   };
 
   try {
