@@ -5,9 +5,19 @@ const DongHo = require('../models/DongHoModel')
 const UserGiaPha = require('../models/UserGiaPhaModels')
 const User = require('../models/UserModels')
 const moment = require('moment');
+const path = require('path');
+
 const FCM = require('fcm-node');
 
-const storage = multer.memoryStorage()
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/'); // Thư mục upload
+  },
+  filename: function (req, file, cb) {
+    // Tạo tên file mới: timestamp-tenfilegoc.jpg
+    cb(null,file.originalname);
+  }
+});
 
 const upload = multer({ storage: storage })
 
@@ -463,9 +473,9 @@ router.post('/addMember/:iddongho', upload.single('avatar'), async (req, res) =>
       worshipaddress,
       worshipperson,
       burialaddress,
-
     } = req.body
-    const avatar = req.file.buffer.toString('base64');
+    const avatar = req.file.filename;
+    const avatarpath=`http://appgiapha.vercel.app/${avatar}`
     const parent = await DongHo.findById(iddongho)
     if (!parent) {
       return res.status(404).json({ error: 'Parent not found' })
@@ -487,7 +497,7 @@ router.post('/addMember/:iddongho', upload.single('avatar'), async (req, res) =>
       hometown: hometown,
       bio: bio,
       dead: dead,
-      avatar: avatar
+      avatar: avatarpath
     };
 
     // Kiểm tra và thêm phone nếu có
