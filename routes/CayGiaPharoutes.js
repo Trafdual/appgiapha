@@ -5,21 +5,41 @@ const DongHo = require('../models/DongHoModel')
 const UserGiaPha = require('../models/UserGiaPhaModels')
 const User = require('../models/UserModels')
 const moment = require('moment');
-const path = require('path');
+const fs = require('fs');
+const AWS = require('aws-sdk');
 
 const FCM = require('fcm-node');
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/'); // Thư mục upload
-  },
-  filename: function (req, file, cb) {
-    // Tạo tên file mới: timestamp-tenfilegoc.jpg
-    cb(null,file.originalname);
-  }
+AWS.config.update({
+  accessKeyId: 'AKIATBPL3NPE3ATWZEWR',
+  secretAccessKey: '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'
 });
+const s3 = new AWS.S3();
+s3.listBuckets((err,data)=>{
+if(err) console.log(err,err.stack)
+else console.log(data)
+})
 
-const upload = multer({ storage: storage })
+const uploadAvatarToS3 = async (avatarPath, avatarName) => {
+  const fileContent = fs.readFileSync(avatarPath);
+
+  // Cấu hình tham số cho việc tải lên
+  const params = {
+    Bucket: 'giapha',
+    Key: avatarName,
+    Body: fileContent
+  };
+
+  try {
+    // Thực hiện tải ảnh lên S3
+    const uploadedData = await s3.upload(params).promise();
+    return uploadedData.Location; // Trả về đường dẫn của ảnh trên S3
+  } catch (error) {
+    console.error('Error uploading avatar to S3:', error);
+    throw error;
+  }
+};
+
 
 const fcm = new FCM('AAAAweb7fLc:APA91bE6i6LcEfNK3rCzjJzpfAjn9vH2ACm-cJ_Kct88B2xXuxOBexUpiQMEZetAAypqYNcLv9Q7fU3oEfpFSHOwr_HAHqVoZnOuyJKss1b4AszppzT52XhaqT5frYfx582Bnwku67jk');
 
@@ -208,7 +228,7 @@ router.post('/joindongho/:donghoId/:userId', async (req, res) => {
 })
 
 
-router.post('/addcon/:idcha', upload.single('avatar'), async (req, res) => {
+router.post('/addcon/:idcha', async (req, res) => {
   try {
     const idcha = req.params.idcha
     const {
@@ -298,7 +318,7 @@ router.post('/addcon/:idcha', upload.single('avatar'), async (req, res) => {
   }
 })
 
-router.post('/editcon/:idcon',upload.single('avatar'),async(req,res)=>{
+router.post('/editcon/:idcon',async(req,res)=>{
   try {
     const idcon = req.params.idcon
     const {
@@ -452,7 +472,7 @@ router.get('/getmember/:userId', async (req, res) => {
 })
 
 
-router.post('/addMember/:iddongho', upload.single('avatar'), async (req, res) => {
+router.post('/addMember/:iddongho', async (req, res) => {
   try {
     const iddongho = req.params.iddongho
     const {
@@ -474,8 +494,9 @@ router.post('/addMember/:iddongho', upload.single('avatar'), async (req, res) =>
       worshipperson,
       burialaddress,
     } = req.body
-    const avatar = req.file.filename;
-    const avatarpath=`http://appgiapha.vercel.app/${avatar}`
+    const avatar = req.file ? req.file.filename:null;
+    const avatarpath=avatarFileName ? await uploadAvatarToS3(req.file.path, avatar) : null; 
+    // Tạo một object chứa dữ liệu mới của thành viên
     const parent = await DongHo.findById(iddongho)
     if (!parent) {
       return res.status(404).json({ error: 'Parent not found' })
