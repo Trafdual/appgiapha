@@ -494,7 +494,7 @@ router.post('/addMember/:iddongho', async (req, res) => {
       worshipperson,
       burialaddress,
     } = req.body
-    const avatar = req.file ? req.file.filename:null;
+    const avatar=req.file.filename;
     const avatarpath=avatar ? await uploadAvatarToS3(req.file.path, avatar) : null; 
     // Tạo một object chứa dữ liệu mới của thành viên
     const parent = await DongHo.findById(iddongho)
