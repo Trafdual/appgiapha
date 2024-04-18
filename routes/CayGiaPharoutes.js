@@ -501,7 +501,7 @@ router.post('/addMember/:iddongho',upload.single('avatar') ,async (req, res) => 
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
-    const avatar=req.file.fieldname;
+    const avatar=req.file.originalname;
     const avatarpath=await uploadAvatarToS3(req.file.buffer,avatar); 
     // Tạo một object chứa dữ liệu mới của thành viên
     const parent = await DongHo.findById(iddongho)
