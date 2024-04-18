@@ -8,6 +8,17 @@ const moment = require('moment');
 const fs = require('fs');
 const AWS = require('aws-sdk');
 
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/'); 
+  },
+  filename: function (req, file, cb) {
+    cb(null,file.originalname);
+  }
+});
+
+const upload = multer({ storage: storage });
+
 const FCM = require('fcm-node');
 
 AWS.config.update({
@@ -20,7 +31,7 @@ if(err) console.log(err,err.stack)
 else console.log(data)
 })
 
-const uploadAvatarToS3 = async (avatarPath, avatarName) => {
+const uploadAvatarToS3 = async (avatarPath,avatarName) => {
   const fileContent = fs.readFileSync(avatarPath);
 
   // Cấu hình tham số cho việc tải lên
@@ -472,7 +483,7 @@ router.get('/getmember/:userId', async (req, res) => {
 })
 
 
-router.post('/addMember/:iddongho', async (req, res) => {
+router.post('/addMember/:iddongho',upload.single('avatar') ,async (req, res) => {
   try {
     const iddongho = req.params.iddongho
     const {
@@ -495,7 +506,7 @@ router.post('/addMember/:iddongho', async (req, res) => {
       burialaddress,
     } = req.body
     const avatar=req.file.filename;
-    const avatarpath=avatar ? await uploadAvatarToS3(req.file.path, avatar) : null; 
+    const avatarpath=await uploadAvatarToS3(req.file.path,avatar); 
     // Tạo một object chứa dữ liệu mới của thành viên
     const parent = await DongHo.findById(iddongho)
     if (!parent) {
