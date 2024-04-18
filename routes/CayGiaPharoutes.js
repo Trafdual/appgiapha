@@ -231,7 +231,7 @@ router.post('/joindongho/:donghoId/:userId', async (req, res) => {
 })
 
 
-router.post('/addcon/:idcha', async (req, res) => {
+router.post('/addcon/:idcha',upload.single('avatar'), async (req, res) => {
   try {
     const idcha = req.params.idcha
     const {
@@ -254,7 +254,8 @@ router.post('/addcon/:idcha', async (req, res) => {
       worshipperson,
       burialaddress,
     } = req.body
-    const avatar = req.file.buffer.toString('base64');
+    const avatar=req.file.originalname;
+    const avatarpath=await uploadAvatarToS3(req.file.buffer,avatar); 
     const cha = await UserGiaPha.findById(idcha)
     if (!cha) {
       return res.status(404).json({ error: 'Parent not found' })
@@ -280,7 +281,7 @@ router.post('/addcon/:idcha', async (req, res) => {
       hometown,
       bio,
       dead,
-      avatar
+      avatar:avatarpath
     });
 
     const user = await User.findOne(username);
