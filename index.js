@@ -14,6 +14,7 @@ const eventroute = require('./routes/EventRoutes');
 const giaimongroute = require('./routes/GiacMongRoutes');
 const quexamroute=require('./routes/QueXamRoutes');
 const homeroutes=require('./routes/Homeroutes')
+const modelroutes=require('./routes/ModelRouter');
 var path = require('path');
 
 
@@ -62,6 +63,7 @@ app.use('/', eventroute);
 app.use('/', giaimongroute);
 app.use('/', quexamroute);
 app.use('/',homeroutes);
+app.use('/',modelroutes);
 
 const port=process.env.PORT || 8080
 app.listen(port, () => {
