@@ -17,7 +17,6 @@ const homeroutes=require('./routes/Homeroutes')
 const modelroutes=require('./routes/ModelRouter');
 var path = require('path');
 
-
 var app = express();
 app.use(methodOverride('_method'));
 
@@ -28,11 +27,15 @@ mongoose.connect(uri, {
   useUnifiedTopology: true
 }).then(console.log("kết nối thành công"));
 
+
+
 const mongoStoreOptions = {
   mongooseConnection: mongoose.connection,
   mongoUrl: uri,
   collection: 'sessions',
 };
+
+
 
 app.use(cookieParser());
 app.use(bodyParser.json());
@@ -74,3 +77,5 @@ app.listen(port, () => {
   }
 }
 );
+
+// module.exports = { gfs };

@@ -5,6 +5,7 @@ const Xam = require("../models/XamModels");
 const Queboi=require("../models/QueBoiModels")
 const GiacMong = require("../models/GiacmongModel");
 
+
 router.get("/home", async (req, res) => {
     try {
         const loaivankhan = await LoaiVanKhan.find();

@@ -4,7 +4,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const moment = require('moment');
-const UserGiaPha = require("../models/UserGiaPhaModels");
+const UserGiaPha = require("../models/UserGiaPhaModels")
 
 const storage = multer.memoryStorage();
 
