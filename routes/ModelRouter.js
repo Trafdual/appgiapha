@@ -26,9 +26,10 @@ const axios = require('axios');
 
 
 const SCOPES = ['https://www.googleapis.com/auth/drive.readonly'];
+const KEYFILEPATH = '/trusty-magnet-424007-d8-5c8a29b5b083.json'; // Thay bằng đường dẫn thực tế đến tệp credentials.json
 async function authenticate() {
   const auth = new google.auth.GoogleAuth({
-    keyFile: key,
+    keyFile: KEYFILEPATH,
     scopes: SCOPES,
   });
   return await auth.getClient();
