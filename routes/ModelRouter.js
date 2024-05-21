@@ -1,55 +1,94 @@
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
-const fs=require('fs')
-const path=require('path')
-const mongoose = require('mongoose');
+const { google } = require('googleapis');
 const Model = require("../models/model");
-const mongoURI= "mongodb+srv://traz08102003:G1XMVWTucFqfpNch@cp17303.4gzmzyt.mongodb.net/giapha?retryWrites=true&w=majority"
-const conn = mongoose.createConnection(mongoURI);
-const { GridFSBucket } = mongoose.mongo;
 const { Readable } = require('stream');
-// Init gfs
-let gfsBucket;
+const puppeteer = require('puppeteer');
+// const fs=require('fs')
+// const path=require('path')
+const axios = require('axios');
+// const cheerio = require('cheerio');
+// const mongoose = require('mongoose');
+// const mongoURI= "mongodb+srv://traz08102003:G1XMVWTucFqfpNch@cp17303.4gzmzyt.mongodb.net/giapha?retryWrites=true&w=majority"
+// const conn = mongoose.createConnection(mongoURI);
+// const { GridFSBucket } = mongoose.mongo;
 
-conn.once('open', () => {
-  gfsBucket = new GridFSBucket(conn.db, {
-    bucketName: 'uploads',
+// // Init gfs
+// let gfsBucket;
+
+// conn.once('open', () => {
+//   gfsBucket = new GridFSBucket(conn.db, {
+//     bucketName: 'uploads',
+//   });
+// });
+
+
+const SCOPES = ['https://www.googleapis.com/auth/drive.readonly'];
+const KEYFILEPATH = '../trusty-magnet-424007-d8-5c8a29b5b083.json'; // Thay bằng đường dẫn thực tế đến tệp credentials.json
+async function authenticate() {
+  const auth = new google.auth.GoogleAuth({
+    keyFile: KEYFILEPATH,
+    scopes: SCOPES,
   });
-});
+  return await auth.getClient();
+}
+const upload = multer();
 
-// Create storage engine
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
+async function listFilesInFolder(auth, folderId) {
+  const drive = google.drive({ version: 'v3', auth });
+  const res = await drive.files.list({
+    q: `'${folderId}' in parents`,
+    fields: 'files(id, name)',
+  });
+  return res.data.files;
+}
+
+async function downloadFile(auth, fileId) {
+  const drive = google.drive({ version: 'v3', auth });
+  const res = await drive.files.get(
+    { fileId, alt: 'media' },
+    { responseType: 'stream' }
+  );
+  return new Promise((resolve, reject) => {
+    let data = '';
+    res.data
+      .on('data', chunk => {
+        data += chunk;
+      })
+      .on('end', () => {
+        resolve(data);
+      })
+      .on('error', err => {
+        reject(err);
+      });
+  });
+}
 
 router.post('/readfiles', async (req, res) => {
-  const directoryPath = req.body.path; // Đường dẫn thư mục từ query parameter
+  const folderId = req.body.folderId;
 
-  if (!directoryPath) {
-    return res.status(400).json({ message: 'Thiếu đường dẫn thư mục.' });
+  if (!folderId) {
+    return res.status(400).json({ message: 'Thiếu folderId.' });
   }
 
   try {
-    // Đọc danh sách các file trong thư mục
-    fs.readdir(directoryPath, (err, files) => {
-      if (err) {
-        return res.status(500).json({ message: 'Lỗi khi đọc thư mục.', error: err.message });
-      }
+    const auth = await authenticate();
+    const files = await listFilesInFolder(auth, folderId);
 
-      // Đọc nội dung từng file
-      const fileContents = files.map((file) => {
-        const filePath = path.join(directoryPath, file);
-        const content = fs.readFileSync(filePath, 'utf8');
-        return { fileName: file, content: content };
-      });
+    const fileContents = [];
+    for (const file of files) {
+      const content = await downloadFile(auth, file.id);
+      fileContents.push({ fileName: file.name, content });
+    }
 
-      res.json(fileContents);
-    });
+    res.json(fileContents);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Đã xảy ra lỗi khi đọc các tệp.' });
+    res.status(500).json({ message: 'Đã xảy ra lỗi khi đọc các tệp.', error: error.message });
   }
 });
+
 
 router.post('/modelpost1', upload.array('files'), async (req, res) => {
   try {
@@ -74,10 +113,12 @@ router.post('/modelpost1', upload.array('files'), async (req, res) => {
         readableStream.on('end', async () => {
           const fileContent = uploadedFile.buffer.toString('utf8');
           const nameMatch = fileContent.match(/name=(.*)/);
-          const name = nameMatch[1].replace(/\\/g, '').trim();
-          const duplicate = await Model.findOne({ name });
-          if (!duplicate) {
-            uniqueFiles.push(uploadedFile);
+          if (nameMatch) {
+            const name = nameMatch[1].replace(/\\/g, '').trim();
+            const duplicate = await Model.findOne({ name });
+            if (!duplicate) {
+              uniqueFiles.push(uploadedFile);
+            }
           }
           resolve();
         });
@@ -86,32 +127,32 @@ router.post('/modelpost1', upload.array('files'), async (req, res) => {
       });
     }
 
-    // Lưu các file không trùng nội dung vào MongoDB GridFS và đẩy chúng lên
+    // Upload unique files to Google Drive
     for (const uniqueFile of uniqueFiles) {
       const readableStream = Readable.from(uniqueFile.buffer);
-      const uploadStream = gfsBucket.openUploadStream(uniqueFile.originalname);
 
-      readableStream.pipe(uploadStream);
-
-      await new Promise((resolve, reject) => {
-        uploadStream.on('finish', async () => {
-          const fileContent = uniqueFile.buffer.toString('utf8');
-          const nameMatch = fileContent.match(/name=(.*)/);
-
-          if (!nameMatch) {
-            return res.status(400).json({ message: 'Tệp tin không chứa trường name hợp lệ.' });
-          }
-
-          const name = nameMatch[1].replace(/\\/g, '').trim();
-          const newModel = new Model({ name });
-          await newModel.save();
-          newModels.push(newModel);
-
-          resolve();
-        });
-
-        uploadStream.on('error', reject);
+      const driveResponse = await drive.files.create({
+        requestBody: {
+          name: uniqueFile.originalname,
+          mimeType: uniqueFile.mimetype,
+        },
+        media: {
+          mimeType: uniqueFile.mimetype,
+          body: readableStream,
+        },
       });
+
+      const fileContent = uniqueFile.buffer.toString('utf8');
+      const nameMatch = fileContent.match(/name=(.*)/);
+
+      if (!nameMatch) {
+        return res.status(400).json({ message: 'Tệp tin không chứa trường name hợp lệ.' });
+      }
+
+      const name = nameMatch[1].replace(/\\/g, '').trim();
+      const newModel = new Model({ name, fileId: driveResponse.data.id }); // Lưu cả fileId từ Google Drive
+      await newModel.save();
+      newModels.push(newModel);
     }
 
     res.json(newModels);
