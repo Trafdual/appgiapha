@@ -44,10 +44,6 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 app.use(express.static(path.join(__dirname, '/public')));
 app.use(express.static(path.join(__dirname, '/uploads')));
-app.use(express.static(path.join(__dirname, '/trusty-magnet-424007-d8-5c8a29b5b083.json')));
-
-
-
 
 app.use(session({
   secret: 'mysecretkey',
