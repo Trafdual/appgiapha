@@ -128,10 +128,53 @@
 
 <body>
 <form action="/readfiles" method="post" >
-    <input name="folderId" type="text" multiple>
+    <input name="folderId" type="text" placeholder="nhập id folder driver" multiple>
     <button type="submit">Read Folder</button>
 </form>
-  
+<div id="Tab1" class="tabcontent show">
+
+    <div class="col-1 col-sm-4 col-md-12">
+
+        <table class="table table-bordered table-striped" style="text-align: center;">
+            <tr>
+                <th>ID</th>
+                <th>Tên</th>
+                <th>Màu sắc</th>
+                <th>Imel</th>
+                <th>Dung lượng</th>
+                <th>Chức năng</th>
+                
+            </tr>
+
+            <% model.forEach( ( row )=>{ %>
+
+                <tr>
+                    <td class="td-id">
+                        <%= row._id%>
+                    </td>
+                    <td class="td-name">
+                        <%= row.name%>
+                    </td>
+                    <td class="td-name">
+                        <%= row.color%>
+                    </td>
+                    <td class="td-name">
+                        <%= row.imel%>
+                    </td>
+                    <td class="td-name">
+                        <%= row.dungluong%>
+                    </td>
+                    <td>
+                        
+                    </td>
+
+                </tr>
+                <% } ) %>
+
+        </table>
+
+    </div>
+</div>
 
     <script>
         function showSuccessDialog() {
