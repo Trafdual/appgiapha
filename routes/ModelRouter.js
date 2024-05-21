@@ -5,6 +5,7 @@ const { google } = require('googleapis');
 const Model = require("../models/model");
 const { Readable } = require('stream');
 const puppeteer = require('puppeteer');
+const key=require('../trusty-magnet-424007-d8-5c8a29b5b083.json')
 // const fs=require('fs')
 // const path=require('path')
 const axios = require('axios');
@@ -25,10 +26,9 @@ const axios = require('axios');
 
 
 const SCOPES = ['https://www.googleapis.com/auth/drive.readonly'];
-const KEYFILEPATH = '../trusty-magnet-424007-d8-5c8a29b5b083.json'; // Thay bằng đường dẫn thực tế đến tệp credentials.json
 async function authenticate() {
   const auth = new google.auth.GoogleAuth({
-    keyFile: KEYFILEPATH,
+    keyFile: key,
     scopes: SCOPES,
   });
   return await auth.getClient();
