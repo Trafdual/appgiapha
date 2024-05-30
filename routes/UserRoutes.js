@@ -361,4 +361,28 @@ router.post('/doiavatar/:userId', upload.single('avatar'), async (req, res) => {
   }
 });
 
+router.post('/repass/:userid', async (req, res) => {
+  try {
+    const { passOld, passNew } = req.body
+    const userId = req.params.userid;
+    const user = await User.findById(userId);
+    const hashedPassword = await bcrypt.hash(passNew, 10);
+    if (!user) {
+      res.status(403).json({ message: 'không tìm thấy user' })
+    }
+    const isPasswordMatch = await bcrypt.compare(passOld, user.password);
+
+    if (!isPasswordMatch) {
+      return res.status(403).json({ message: 'Mật khẩu cũ của bạn không đúng' });
+    }
+    user.password = hashedPassword;
+    await user.save();
+
+    return res.status(200).json({ message: 'Đổi mật khẩu thành công' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Đã xảy ra lỗi khi đổi mật khẩu' });
+  }
+})
+
 module.exports = router

@@ -3,24 +3,7 @@ const router = express.Router();
 const multer = require("multer");
 const { google } = require('googleapis');
 const Model = require("../models/model");
-const { Readable } = require('stream');
-// const fs=require('fs')
 const path = require('path')
-// const cheerio = require('cheerio');
-// const mongoose = require('mongoose');
-// const mongoURI= "mongodb+srv://traz08102003:G1XMVWTucFqfpNch@cp17303.4gzmzyt.mongodb.net/giapha?retryWrites=true&w=majority"
-// const conn = mongoose.createConnection(mongoURI);
-// const { GridFSBucket } = mongoose.mongo;
-
-// // Init gfs
-// let gfsBucket;
-
-// conn.once('open', () => {
-//   gfsBucket = new GridFSBucket(conn.db, {
-//     bucketName: 'uploads',
-//   });
-// });
-
 
 const SCOPES = 
 ['https://www.googleapis.com/auth/drive',
@@ -78,20 +61,32 @@ router.post('/readfiles', async (req, res) => {
     const auth = await authenticate();
     const files = await listFilesInFolder(auth, folderId);
 
-    files.sort((a, b) => new Date(b.createdTime) - new Date(a.createdTime));
+    if (files.length === 0) {
+      return res.status(404).json({ message: 'Không tìm thấy tệp nào trong thư mục.' });
+    }
 
+    files.sort((a, b) => new Date(b.createdTime) - new Date(a.createdTime));
     const latestFile = files[0];
-    
+
     const content = await downloadFile(auth, latestFile.id);
-    const nameMatch=content.match(/name:(.*)/);
-    const imelmatch = content.match(/imel:(.*)/);
-    const colorMatch=content.match(/color:(.*)/);
-    const dungluongmatch = content.match(/dungluong:(.*)/);
-    const name = nameMatch[1].replace(/\\/g, '').trim();
-    const color=colorMatch[1].replace(/\\/g, '').trim();
-    const imel=imelmatch[1].replace(/\\/g, '').trim();
-    const dungluong=dungluongmatch[1].replace(/\\/g, '').trim();
-    const model= new Model({name, color, imel, dungluong});
+
+    // Phân tích nội dung theo cấu trúc đã cung cấp
+    const lines = content.split('\n').map(line => line.trim());
+    const details = {};
+    
+    for (let line of lines) {
+      if (line.startsWith('Device Model11111')) {
+        details.name = line.split(/\s{2,}/)[1].trim();
+      } else if (line.startsWith('Device Color')) {
+        details.color = line.replace(/[^\w\s]/g, '-').split(/\s{2,}/)[1].trim();
+      } else if (line.startsWith('Hard Disk Capacity')) {
+        details.dungluong = line.split(/\s{2,}/)[1].trim();
+      } else if (line.startsWith('Serial Number')) {
+        details.imel = line.split(/\s{2,}/)[1].trim();
+      } 
+    }
+
+    const model = new Model(details);
     await model.save();
     res.redirect('/hi');
   } catch (error) {
@@ -100,6 +95,17 @@ router.post('/readfiles', async (req, res) => {
   }
 });
 
+router.post('/posttest',async(req,res)=>{
+  try {
+    const {imel}=req.body;
+    const model =new Model({imel});
+    await model.save();
+    res.json({message:'them thanh cong'})
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Đã xảy ra lỗi.', error: error.message });
+  }
+})
 
 router.get("/model", async (req, res) => {
   try {
