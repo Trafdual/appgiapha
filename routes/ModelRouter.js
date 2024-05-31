@@ -154,22 +154,26 @@ router.get("/hi", async (req, res) => {
 });
 router.get('/api/events', (req, res) => {
   try {
-    res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+  let clients = [];
 
   const clientId = Date.now();
-  const sendData = (data) => res.write(`data: ${JSON.stringify(data)}\n\n`);
+  clients.push(res);
 
-  const changeListener = (data) => {
+  req.on('close', () => {
+    clients = clients.filter(client => client !== res);
+  });
+
+  Model.watch().on('change', data => {
     if (data.operationType === 'insert') {
-      sendData({ newElement: true, item: data.fullDocument });
+      clients.forEach(client => {
+        client.write(`data: ${JSON.stringify({ newElement: true, item: data.fullDocument })}\n\n`);
+      });
     }
-  };
-
-  Model.watch().on('change', changeListener);
-
-  res.redirect('/hi');
+  });
 
   } catch (error) {
     console.error(error);

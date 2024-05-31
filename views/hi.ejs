@@ -182,12 +182,20 @@
         eventSource.onmessage = function (event) {
             const data = JSON.parse(event.data);
             if (data.newElement) {
-                location.reload();
+                console.log('Dữ liệu mới:', data.item);
+                // Ví dụ: Cập nhật giao diện người dùng với dữ liệu mới
+                const newItem = document.createElement('div');
+                newItem.textContent = data.item.name;
+                document.getElementById('Tab1').appendChild(newItem);
             }
         };
 
         eventSource.onerror = function (error) {
             console.error('SSE error:', error);
+        };
+
+        eventSource.onerror = function (event) {
+            console.error('Đã xảy ra lỗi:', event);
         };
         function showSuccessDialog() {
             event.preventDefault();
