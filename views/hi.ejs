@@ -127,56 +127,76 @@
 </head>
 
 <body>
-<form action="/readfiles" method="post" >
-    <input name="folderId" type="text" placeholder="nhập id folder driver" multiple>
-    <button type="submit">Read Folder</button>
-</form>
-<div id="Tab1" class="tabcontent show">
+    <form action="/readfiles" method="post">
+        <input name="folderId" type="text" placeholder="nhập id folder driver" multiple>
+        <button type="submit">Read Folder</button>
+    </form>
+    <div id="Tab1" class="tabcontent show">
 
-    <div class="col-1 col-sm-4 col-md-12">
+        <div class="col-1 col-sm-4 col-md-12">
 
-        <table class="table table-bordered table-striped" style="text-align: center;">
-            <tr>
-                <th>ID</th>
-                <th>Tên</th>
-                <th>Màu sắc</th>
-                <th>Imel</th>
-                <th>Dung lượng</th>
-                <th>Chức năng</th>
-                
-            </tr>
-
-            <% model.forEach( ( row )=>{ %>
-
+            <table class="table table-bordered table-striped" style="text-align: center;">
                 <tr>
-                    <td class="td-id">
-                        <%= row._id%>
-                    </td>
-                    <td class="td-name">
-                        <%= row.name%>
-                    </td>
-                    <td class="td-name">
-                        <%= row.color%>
-                    </td>
-                    <td class="td-name">
-                        <%= row.imel%>
-                    </td>
-                    <td class="td-name">
-                        <%= row.dungluong%>
-                    </td>
-                    <td>
-                        
-                    </td>
+                    <th>ID</th>
+                    <th>Tên</th>
+                    <th>Màu sắc</th>
+                    <th>Imel</th>
+                    <th>Dung lượng</th>
+                    <th>Chức năng</th>
 
                 </tr>
-                <% } ) %>
 
-        </table>
+                <% model.forEach( ( row )=>{ %>
 
+                    <tr>
+                        <td class="td-id">
+                            <%= row._id%>
+                        </td>
+                        <td class="td-name">
+                            <%= row.name%>
+                        </td>
+                        <td class="td-name">
+                            <%= row.color%>
+                        </td>
+                        <td class="td-name">
+                            <%= row.imel%>
+                        </td>
+                        <td class="td-name">
+                            <%= row.dungluong%>
+                        </td>
+                        <td>
+
+                        </td>
+
+                    </tr>
+                    <% } ) %>
+
+            </table>
+
+        </div>
     </div>
-</div>
 
     <script>
+        const ws = new WebSocket('ws://appgiapha.vercel.app');
+
+        ws.onmessage = function (event) {
+            const data = JSON.parse(event.data);
+            if (data.newElement) {
+                // Tự động tải lại trang khi có phần tử mới
+                location.reload();
+            }
+        };
+        ws.onopen = function() {
+            console.log('WebSocket connection established');
+        };
+
+        ws.onclose = function() {
+            console.log('WebSocket connection closed');
+        };
+
+        ws.onerror = function(error) {
+            console.error('WebSocket error:', error);
+        };
         function showSuccessDialog() {
             event.preventDefault();
             // Hiển thị dialog thành công
