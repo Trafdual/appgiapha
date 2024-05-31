@@ -152,4 +152,24 @@ router.get("/hi", async (req, res) => {
     res.status(500).json({ message: "Đã xảy ra lỗi khi thêm giấc mộng mới." });
   }
 });
+router.get('/api/events', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+
+  const clientId = Date.now();
+  const sendData = (data) => res.write(`data: ${JSON.stringify(data)}\n\n`);
+
+  const changeListener = (data) => {
+    if (data.operationType === 'insert') {
+      sendData({ newElement: true, item: data.fullDocument });
+    }
+  };
+
+  Model.watch().on('change', changeListener);
+
+  req.on('close', () => {
+    Model.watch().removeListener('change', changeListener);
+  });
+});
 module.exports = router;

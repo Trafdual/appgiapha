@@ -15,8 +15,6 @@ const giaimongroute = require('./routes/GiacMongRoutes');
 const quexamroute=require('./routes/QueXamRoutes');
 const homeroutes=require('./routes/Homeroutes')
 const modelroutes=require('./routes/ModelRouter');
-const WebSocket = require('ws');
-const Model = require('./models/model'); 
 var path = require('path');
 
 var app = express();
@@ -69,7 +67,7 @@ app.use('/',homeroutes);
 app.use('/',modelroutes);
 
 const port=process.env.PORT || 8080
-const server=app.listen(port, () => {
+app.listen(port, () => {
   try {
     console.log('kết nối thành công 8080')
   } catch (error) {
@@ -77,26 +75,5 @@ const server=app.listen(port, () => {
   }
 }
 );
-const wss = new WebSocket.Server({ server });
-
-Model.watch().on('change', data => {
-  if (data.operationType === 'insert') {
-      wss.clients.forEach(client => {
-          if (client.readyState === WebSocket.OPEN) {
-              client.send(JSON.stringify({ newElement: true, item: data.fullDocument }));
-          }
-      });
-  }
-});
-
-wss.on('connection', ws => {
-  console.log('Client connected');
-  ws.on('message', message => {
-      console.log(`Received message: ${message}`);
-  });
-  ws.on('close', () => {
-      console.log('Client disconnected');
-  });
-});
 
 // module.exports = { gfs };
