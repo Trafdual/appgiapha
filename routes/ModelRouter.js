@@ -166,6 +166,9 @@ router.get('/api/events', (req, res) => {
   req.on('close', () => {
     clients = clients.filter(client => client !== res);
   });
+  res.on('error', (err) => {
+    console.error('Gặp lỗi khi gửi dữ liệu SSE:', err);
+  });
 
   Model.watch().on('change', data => {
     if (data.operationType === 'insert') {
