@@ -153,23 +153,45 @@ router.get("/hi", async (req, res) => {
   }
 });
 router.get('/api/events', (req, res) => {
-  res.setHeader('Content-Type', 'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache');
-  res.setHeader('Connection', 'keep-alive');
+  try {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
 
-  const clientId = Date.now();
-  const sendData = (data) => res.write(`data: ${JSON.stringify(data)}\n\n`);
+    const clientId = Date.now();
+    const sendData = (data) => res.write(`data: ${JSON.stringify(data)}\n\n`);
 
-  const changeListener = (data) => {
-    if (data.operationType === 'insert') {
-      sendData({ newElement: true, item: data.fullDocument });
-    }
-  };
+    const changeListener = (data) => {
+      if (data.operationType === 'insert') {
+        sendData({ newElement: true, item: data.fullDocument });
+      }
+    };
 
-  Model.watch().on('change', changeListener);
+    Model.watch().on('change', changeListener);
 
-  req.on('close', () => {
-    Model.watch().removeListener('change', changeListener);
-  });
+    req.on('close', () => {
+      Model.watch().removeListener('change', changeListener);
+      res.end();
+    });
+
+    // Kiểm tra xem đã gửi dữ liệu chưa
+    let hasSentData = false;
+
+    // Kiểm tra xem đã gửi dữ liệu từ sự kiện change chưa
+    setTimeout(() => {
+      if (!hasSentData) {
+        res.write(`data: ${JSON.stringify({ message: "Không có dữ liệu mới." })}\n\n`);
+        res.end();
+      }
+      else{
+        res.write(`data: ${JSON.stringify({ message: "đã thêm dữ liệu mới." })}\n\n`);
+        res.end(); 
+      }
+    }, 10000); // Thời gian timeout, bạn có thể điều chỉnh tùy theo nhu cầu
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Đã xảy ra lỗi khi thêm giấc mộng mới." });
+  }
 });
 module.exports = router;
