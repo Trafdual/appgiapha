@@ -182,7 +182,7 @@
         eventSource.onmessage = function (event) {
             const data = JSON.parse(event.data);
             if (data.newElement) {
-                // Xử lý dữ liệu mới ở đây
+                location.reload();
             }
         };
 
