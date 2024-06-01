@@ -152,6 +152,15 @@ router.get("/hi", async (req, res) => {
     res.status(500).json({ message: "Đã xảy ra lỗi khi thêm giấc mộng mới." });
   }
 });
+router.get('/gettest',async(req,res)=>{
+  try {
+    const model=await Model.find().lean();
+    res.json(model)
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Đã xảy ra lỗi khi thêm giấc mộng mới." });
+  }
+})
 router.get('/api/events', (req, res) => {
   try {
   res.setHeader('Content-Type', 'text/event-stream');

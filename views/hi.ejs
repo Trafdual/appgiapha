@@ -2,12 +2,13 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <meta name="google-site-verification" content="w8EqMC0tywLwLb7tQHtpOo506Dl-99uo2BkzYLiPDxo" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Trang Chủ</title>
-    <link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css" />
+    <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
 
     <style>
         .container {
@@ -25,7 +26,6 @@
 
         .btn {
             border-color: black;
-
         }
 
         .from {
@@ -116,102 +116,99 @@
             border-radius: 10px;
             max-width: 400px;
             text-align: center;
-
         }
 
         .dialog-buttons {
             margin-top: 2%;
         }
     </style>
-
 </head>
 
 <body>
     <form action="/readfiles" method="post">
-        <input name="folderId" type="text" placeholder="nhập id folder driver" multiple>
+        <input name="folderId" type="text" placeholder="nhập id folder driver" multiple />
         <button type="submit">Read Folder</button>
     </form>
     <div id="Tab1" class="tabcontent show">
-
         <div class="col-1 col-sm-4 col-md-12">
-
-            <table class="table table-bordered table-striped" style="text-align: center;">
-                <tr>
-                    <th>ID</th>
-                    <th>Tên</th>
-                    <th>Màu sắc</th>
-                    <th>Imel</th>
-                    <th>Dung lượng</th>
-                    <th>Chức năng</th>
-
-                </tr>
-
-                <% model.forEach( ( row )=>{ %>
-
+            <table class="table table-bordered table-striped" style="text-align: center">
+                <thead>
                     <tr>
-                        <td class="td-id">
-                            <%= row._id%>
-                        </td>
-                        <td class="td-name">
-                            <%= row.name%>
-                        </td>
-                        <td class="td-name">
-                            <%= row.color%>
-                        </td>
-                        <td class="td-name">
-                            <%= row.imel%>
-                        </td>
-                        <td class="td-name">
-                            <%= row.dungluong%>
-                        </td>
-                        <td>
-
-                        </td>
-
+                        <th>ID</th>
+                        <th>Tên</th>
+                        <th>Màu sắc</th>
+                        <th>Imel</th>
+                        <th>Dung lượng</th>
+                        <th>Chức năng</th>
                     </tr>
-                    <% } ) %>
+                </thead>
 
+
+                <tbody id="commentsTableBody">
+                    <!-- Hàng dữ liệu sẽ được chèn vào đây từ phía client -->
+                </tbody>
             </table>
-
         </div>
     </div>
 
     <script>
-        const eventSource = new EventSource('/api/events');
+        //   const ably = new Ably.Realtime(
+        //     'vWlvGg.-XYngQ:bObD8PvuyKQy28aXFmdJC4-qzaicOq3P6vTGyToHrds'
+        //   )
+        //   ably.connection.once('connected', () => {
+        //     console.log('Connected to Ably!')
+        //   })
 
-        eventSource.onmessage = function (event) {
-            const data = JSON.parse(event.data);
-            if (data.newElement) {
-                console.log('Dữ liệu mới:', data.item);
-                // Ví dụ: Cập nhật giao diện người dùng với dữ liệu mới
-                const newItem = document.createElement('div');
-                newItem.textContent = data.item.name;
-                document.getElementById('Tab1').appendChild(newItem);
-            }
-        };
+        //   // Create a channel called 'get-started' and register a listener to subscribe to all messages with the name 'first'
+        //   const channel = ably.channels.get('hello')
+        //   channel.attach()
+        //   console.log(channel)
+        //   channel.subscribe('update', function (message) {
+        //     // Load lại trang khi có thông báo từ Ably
+        //     location.reload()
+        //   })
 
-        eventSource.onerror = function (error) {
-            console.error('SSE error:', error);
-        };
+        function getAndDisplay() {
+            const commentsTableBody = document.getElementById('commentsTableBody');
 
-        eventSource.onerror = function (event) {
-            console.error('Đã xảy ra lỗi:', event);
-        };
+            fetch(`/gettest`)
+            .then(response => response.json())
+            .then(data => {
+                commentsTableBody.innerHTML = ''; // Clear the existing content
+
+                data.forEach(model => {
+                    const newCommentDiv = document.createElement('tr');
+                    newCommentDiv.innerHTML = `
+                        <td class="td-id">${model._id}</td>
+                        <td class="td-name">${model.name}</td>
+                        <td class="td-name">${model.color}</td>
+                        <td class="td-name">${model.imel}</td>
+                        <td class="td-name">${model.dungluong}</td>
+                        <td></td>
+                    `;
+                    commentsTableBody.appendChild(newCommentDiv);
+                });
+            })
+            .catch(error => {
+                console.error('Lỗi khi lấy danh sách bình luận:', error);
+                alert('Đã xảy ra lỗi khi lấy danh sách bình luận.');
+            });
+        }
+
+        setInterval(getAndDisplay,5000)
         function showSuccessDialog() {
-            event.preventDefault();
+            event.preventDefault()
             // Hiển thị dialog thành công
-            var dialog = document.getElementById('successDialog');
-            dialog.style.display = 'block';
+            var dialog = document.getElementById('successDialog')
+            dialog.style.display = 'block'
         }
 
         function hideDialog() {
             // Ẩn dialog
-            event.preventDefault();
-            var dialog = document.getElementById('successDialog');
-            dialog.style.display = 'none';
+            event.preventDefault()
+            var dialog = document.getElementById('successDialog')
+            dialog.style.display = 'none'
         }
-
-
     </script>
     <script src="/bootstrap/js/bootstrap.bundle.min.js"></script>
 </body>
