@@ -1,40 +1,52 @@
-const router = require("express").Router();
-const User = require('../models/UserModels');
-const bcrypt = require("bcryptjs");
-const jwt = require('jsonwebtoken');
-const multer = require('multer');
-const moment = require('moment');
-const UserGiaPha = require("../models/UserGiaPhaModels")
+const router = require('express').Router()
+const User = require('../models/UserModels')
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
+const multer = require('multer')
+const moment = require('moment')
+const UserGiaPha = require('../models/UserGiaPhaModels')
+const DongHo = require('../models/DongHoModel')
+const BaiViet = require('../models/BaiVietModels')
 
-const storage = multer.memoryStorage();
+const storage = multer.memoryStorage()
 
-const upload = multer({ storage: storage });
+const upload = multer({ storage: storage })
 
 //đây là api thử nghiệm thêm token của máy để test thông báo
 router.post('/register/:token', async (req, res) => {
   try {
-    const { username, password, phone, hovaten, date, address, hometown, job, role } = req.body;
-    const token = req.params.token;
+    const {
+      username,
+      password,
+      phone,
+      hovaten,
+      date,
+      address,
+      hometown,
+      job,
+      role
+    } = req.body
+    const token = req.params.token
 
     if (!phone || !/^\d{10}$/.test(phone)) {
-      return res.status(400).json({ message: 'Số điện thoại không hợp lệ' });
+      return res.status(400).json({ message: 'Số điện thoại không hợp lệ' })
     }
-    const exitphone = await User.findOne({ phone });
+    const exitphone = await User.findOne({ phone })
     if (exitphone) {
-      return res.status(400).json({ message: 'số điện thoại đã được đăng kí' });
+      return res.status(400).json({ message: 'số điện thoại đã được đăng kí' })
     }
 
-    const existingUser = await User.findOne({ username });
+    const existingUser = await User.findOne({ username })
     if (existingUser) {
-      return res.status(400).json({ message: 'Tên người dùng đã tồn tại' });
+      return res.status(400).json({ message: 'Tên người dùng đã tồn tại' })
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const currentDate = new Date();
+    const hashedPassword = await bcrypt.hash(password, 10)
+    const currentDate = new Date()
 
-    const currentdateMoment = moment(currentDate, 'DD/MM/YYYY');
-    const dateMoment = moment(date, 'DD/MM/YYYY');
-    const yearsold = currentdateMoment.diff(dateMoment, 'years');
+    const currentdateMoment = moment(currentDate, 'DD/MM/YYYY')
+    const dateMoment = moment(date, 'DD/MM/YYYY')
+    const yearsold = currentdateMoment.diff(dateMoment, 'years')
 
     const user = new User({
       username,
@@ -47,9 +59,9 @@ router.post('/register/:token', async (req, res) => {
       hovaten,
       job,
       yearsold
-    });
-    user.fcmToken.push(token);
-    await user.save();
+    })
+    user.fcmToken.push(token)
+    await user.save()
 
     const responseData = {
       success: user.success,
@@ -67,43 +79,51 @@ router.post('/register/:token', async (req, res) => {
             hometown: user.hometown,
             job: user.job,
             role: user.role
-          },
-        ],
-      },
-    };
+          }
+        ]
+      }
+    }
 
-    res.status(201).json(responseData);
+    res.status(201).json(responseData)
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Đã xảy ra lỗi.' });
+    console.error(error)
+    res.status(500).json({ message: 'Đã xảy ra lỗi.' })
   }
-});
-
+})
 
 router.post('/register', async (req, res) => {
   try {
-    const { username, password, phone, hovaten, date, address, hometown, job, role } = req.body;
-
+    const {
+      username,
+      password,
+      phone,
+      hovaten,
+      date,
+      address,
+      hometown,
+      job,
+      role
+    } = req.body
 
     if (!phone || !/^\d{10}$/.test(phone)) {
-      return res.status(400).json({ message: 'Số điện thoại không hợp lệ' });
+      return res.status(400).json({ message: 'Số điện thoại không hợp lệ' })
     }
-    const exitphone = await User.findOne({ phone });
+    const exitphone = await User.findOne({ phone })
     if (exitphone) {
-      return res.status(400).json({ message: 'số điện thoại đã được đăng kí' });
+      return res.status(400).json({ message: 'số điện thoại đã được đăng kí' })
     }
 
-    const existingUser = await User.findOne({ username });
+    const existingUser = await User.findOne({ username })
     if (existingUser) {
-      return res.status(400).json({ message: 'Tên người dùng đã tồn tại' });
+      return res.status(400).json({ message: 'Tên người dùng đã tồn tại' })
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const currentDate = new Date();
+    const hashedPassword = await bcrypt.hash(password, 10)
+    const currentDate = new Date()
 
-    const currentdateMoment = moment(currentDate, 'DD/MM/YYYY');
-    const dateMoment = moment(date, 'DD/MM/YYYY');
-    const yearsold = currentdateMoment.diff(dateMoment, 'years');
+    const currentdateMoment = moment(currentDate, 'DD/MM/YYYY')
+    const dateMoment = moment(date, 'DD/MM/YYYY')
+    const yearsold = currentdateMoment.diff(dateMoment, 'years')
 
     const user = new User({
       username,
@@ -116,8 +136,8 @@ router.post('/register', async (req, res) => {
       hovaten,
       job,
       yearsold
-    });
-    await user.save();
+    })
+    await user.save()
 
     const responseData = {
       success: user.success,
@@ -135,31 +155,35 @@ router.post('/register', async (req, res) => {
             hometown: user.hometown,
             job: user.job,
             role: user.role
-          },
-        ],
-      },
-    };
+          }
+        ]
+      }
+    }
 
-    res.status(201).json(responseData);
+    res.status(201).json(responseData)
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Đã xảy ra lỗi.' });
+    console.error(error)
+    res.status(500).json({ message: 'Đã xảy ra lỗi.' })
   }
-});
+})
 
 router.post('/login', async (req, res) => {
   try {
-    const { username, password } = req.body;
-    const user = await User.findOne({ username });
+    const { username, password } = req.body
+    const user = await User.findOne({ username })
 
     if (!user) {
-      return res.status(401).json({ message: 'Tên đăng nhập hoặc mật khẩu không đúng.' });
+      return res
+        .status(401)
+        .json({ message: 'Tên đăng nhập hoặc mật khẩu không đúng.' })
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await bcrypt.compare(password, user.password)
 
     if (!isPasswordValid) {
-      return res.status(401).json({ message: 'Tên đăng nhập hoặc mật khẩu không đúng.' });
+      return res
+        .status(401)
+        .json({ message: 'Tên đăng nhập hoặc mật khẩu không đúng.' })
     }
 
     const responseData = {
@@ -180,45 +204,46 @@ router.post('/login', async (req, res) => {
             job: user.job,
             role: user.role,
             lineage: user.lineage || ''
-          },
-        ],
-      },
-    };
+          }
+        ]
+      }
+    }
 
-    const token = jwt.sign({ userId: user._id, role: user.role }, 'mysecretkey');
-    responseData.token = token;
-    res.status(200).json(responseData);
+    const token = jwt.sign({ userId: user._id, role: user.role }, 'mysecretkey')
+    responseData.token = token
+    res.status(200).json(responseData)
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Đã xảy ra lỗi.' });
+    console.error(error)
+    res.status(500).json({ message: 'Đã xảy ra lỗi.' })
   }
-});
+})
 
 router.put('/updateUser/:idUser', async (req, res) => {
   try {
-    const { username, hovaten, namsinh, tuoi, phone, address, hometown, job } = req.body;
-    const userId = req.params.idUser;
+    const { username, hovaten, namsinh, tuoi, phone, address, hometown, job } =
+      req.body
+    const userId = req.params.idUser
 
-    const user = await User.findById(userId);
+    const user = await User.findById(userId)
 
     if (!user) {
-      return res.status(404).json({ message: 'Người dùng không tồn tại.' });
+      return res.status(404).json({ message: 'Người dùng không tồn tại.' })
     }
 
     // Cập nhật chỉ những trường mà người dùng đã thay đổi
-    if (hovaten) user.hovaten = hovaten;
-    if (namsinh) user.date = namsinh;
-    if (tuoi) user.yearsold = tuoi;
-    if (phone) user.phone = phone;
-    if (address) user.address = address;
-    if (hometown) user.hometown = hometown;
-    if (job) user.job = job;
-    if (username) user.username = username;
+    if (hovaten) user.hovaten = hovaten
+    if (namsinh) user.date = namsinh
+    if (tuoi) user.yearsold = tuoi
+    if (phone) user.phone = phone
+    if (address) user.address = address
+    if (hometown) user.hometown = hometown
+    if (job) user.job = job
+    if (username) user.username = username
 
-    await user.save();
+    await user.save()
 
     // Tạo token mới sau khi cập nhật thông tin
-    const token = jwt.sign({ userId: user._id, role: user.role }, 'mysecretkey');
+    const token = jwt.sign({ userId: user._id, role: user.role }, 'mysecretkey')
 
     // Chuẩn bị dữ liệu phản hồi
     const responseData = {
@@ -235,45 +260,49 @@ router.put('/updateUser/:idUser', async (req, res) => {
           hometown: user.hometown,
           job: user.job,
           role: user.role
-        },
-      },
-    };
+        }
+      }
+    }
 
-    responseData.token = token;
-    res.status(200).json(responseData);
+    responseData.token = token
+    res.status(200).json(responseData)
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Đã xảy ra lỗi.' });
+    console.error(error)
+    res.status(500).json({ message: 'Đã xảy ra lỗi.' })
   }
-});
+})
 
 router.delete('/deleteUser/:idUser', async (req, res) => {
   try {
-    const userId = req.params.idUser;
+    const userId = req.params.idUser
 
-    const user = await User.findById(userId);
+    const user = await User.findById(userId)
 
     if (!user) {
-      return res.status(404).json({ message: 'Người dùng không tồn tại.' });
+      return res.status(404).json({ message: 'Người dùng không tồn tại.' })
     }
-    await User.deleteOne({ _id: userId });
-
-
+    await DongHo.findByIdAndDelete(user.lineage)
+    await Promise.all(
+      user.baiviet.map(async baiviet => {
+        await BaiViet.findByIdAndDelete(baiviet._id)
+      })
+    )
+    await User.deleteOne({ _id: userId })
     const responseData = {
       success: true,
       message: 'Người dùng đã được xóa thành công.'
-    };
+    }
 
-    res.status(200).json(responseData);
+    res.status(200).json(responseData)
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Đã xảy ra lỗi.' });
+    console.error(error)
+    res.status(500).json({ message: 'Đã xảy ra lỗi.' })
   }
-});
+})
 
 router.get('/users', async (req, res) => {
   try {
-    const users = await User.find({}, { password: 0 });
+    const users = await User.find({}, { password: 0 })
 
     const responseData = {
       success: true,
@@ -291,23 +320,23 @@ router.get('/users', async (req, res) => {
           job: user.job,
           role: user.role,
           lineage: user.lineage || ''
-        })),
-      },
-    };
+        }))
+      }
+    }
 
-    res.status(200).json(responseData);
+    res.status(200).json(responseData)
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Đã xảy ra lỗi.' });
+    console.error(error)
+    res.status(500).json({ message: 'Đã xảy ra lỗi.' })
   }
-});
+})
 
 router.get('/user/:userId', async (req, res) => {
   try {
-    const userId = req.params.userId;
-    const user = await User.findById(userId, { password: 0 });
+    const userId = req.params.userId
+    const user = await User.findById(userId, { password: 0 })
     if (!user) {
-      return res.status(404).json({ message: 'Người dùng không tồn tại.' });
+      return res.status(404).json({ message: 'Người dùng không tồn tại.' })
     }
 
     const responseData = {
@@ -323,65 +352,65 @@ router.get('/user/:userId', async (req, res) => {
       job: user.job,
       role: user.role,
       lineage: user.lineage || ''
-    };
+    }
 
-    res.status(200).json(responseData);
+    res.status(200).json(responseData)
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Đã xảy ra lỗi.' });
+    console.error(error)
+    res.status(500).json({ message: 'Đã xảy ra lỗi.' })
   }
-});
+})
 
 router.post('/doiavatar/:userId', upload.single('avatar'), async (req, res) => {
   try {
-    const userId = req.params.userId;
+    const userId = req.params.userId
     if (!/^[0-9a-fA-F]{24}$/.test(userId)) {
-      return res.status(400).json({ message: 'ID người dùng không hợp lệ.' });
+      return res.status(400).json({ message: 'ID người dùng không hợp lệ.' })
     }
-    const user = await User.findById(userId);
+    const user = await User.findById(userId)
 
     if (!user) {
-      return res.status(404).json({ message: 'Không tìm thấy người dùng.' });
+      return res.status(404).json({ message: 'Không tìm thấy người dùng.' })
     }
 
     if (!req.file) {
-      return res.status(400).json({ message: 'Vui lòng chọn một file ảnh.' });
+      return res.status(400).json({ message: 'Vui lòng chọn một file ảnh.' })
     }
 
-    const avatar = req.file.buffer.toString('base64');
-    user.avatar = avatar;
-    await user.save();
+    const avatar = req.file.buffer.toString('base64')
+    user.avatar = avatar
+    await user.save()
     // Cập nhật avatar cho tất cả người dùng có cùng _id
-    await UserGiaPha.updateMany({ userId: userId }, { avatar });
+    await UserGiaPha.updateMany({ userId: userId }, { avatar })
 
-    return res.status(200).json({ message: 'Đổi avatar thành công.' });
+    return res.status(200).json({ message: 'Đổi avatar thành công.' })
   } catch (error) {
-    console.error('Lỗi khi đổi avatar:', error);
-    res.status(500).json({ error: 'Đã xảy ra lỗi khi đổi avatar.' });
+    console.error('Lỗi khi đổi avatar:', error)
+    res.status(500).json({ error: 'Đã xảy ra lỗi khi đổi avatar.' })
   }
-});
+})
 
 router.post('/repass/:userid', async (req, res) => {
   try {
     const { passOld, passNew } = req.body
-    const userId = req.params.userid;
-    const user = await User.findById(userId);
-    const hashedPassword = await bcrypt.hash(passNew, 10);
+    const userId = req.params.userid
+    const user = await User.findById(userId)
+    const hashedPassword = await bcrypt.hash(passNew, 10)
     if (!user) {
       res.status(403).json({ message: 'không tìm thấy user' })
     }
-    const isPasswordMatch = await bcrypt.compare(passOld, user.password);
+    const isPasswordMatch = await bcrypt.compare(passOld, user.password)
 
     if (!isPasswordMatch) {
-      return res.status(403).json({ message: 'Mật khẩu cũ của bạn không đúng' });
+      return res.status(403).json({ message: 'Mật khẩu cũ của bạn không đúng' })
     }
-    user.password = hashedPassword;
-    await user.save();
+    user.password = hashedPassword
+    await user.save()
 
-    return res.status(200).json({ message: 'Đổi mật khẩu thành công' });
+    return res.status(200).json({ message: 'Đổi mật khẩu thành công' })
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Đã xảy ra lỗi khi đổi mật khẩu' });
+    console.error(error)
+    res.status(500).json({ error: 'Đã xảy ra lỗi khi đổi mật khẩu' })
   }
 })
 
