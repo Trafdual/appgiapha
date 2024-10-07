@@ -574,21 +574,31 @@ router.post('/addMember/:iddongho',upload.single('avatar') ,async (req, res) => 
 })
 
 
+//người dùng chỉ được tạo 1 dòng họ
 router.post('/postdongho/:userId', async (req, res) => {
   try {
     const userId = req.params.userId;
     const user = await User.findById(userId);
-    const { name, address, key } = req.body
+    
+    // Kiểm tra nếu người dùng đã có dòng họ
+    if (user.lineage) {
+      return res.status(400).json({ error: 'Người dùng đã có dòng họ. Vui lòng xóa dòng họ hiện tại trước khi tạo dòng họ mới.' });
+    }
+
+    const { name, address, key } = req.body;
     const dongho = new DongHo({
       name,
       address,
       key
-    })
-    user.lineage = dongho._id
-    user.role = 'admin';
-    dongho.userId.push(userId)
-    await dongho.save()
+    });
+
+    user.lineage = dongho._id; // Gán dòng họ cho người dùng
+    user.role = 'admin'; // Đặt vai trò là admin
+    dongho.userId.push(userId); // Liên kết dòng họ với người dùng
+
+    await dongho.save();
     await user.save();
+
     const resdata = {
       iddongho: dongho._id,
       namedongho: dongho.name,
@@ -600,13 +610,44 @@ router.post('/postdongho/:userId', async (req, res) => {
       hometown: user.hometown,
       phone: user.phone,
       role: user.role
-    }
+    };
+
     res.json(resdata);
   } catch (error) {
-    console.error(error)
-    res.status(500).json({ error: 'Internal Server Error' })
+    console.error(error);
+    res.status(500).json({ error: 'Lỗi hệ thống' });
   }
-})
+});
+
+// API xóa dòng họ
+router.delete('/xoadongho/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const user = await User.findById(userId);
+    
+    // Kiểm tra nếu người dùng không có dòng họ
+    if (!user.lineage) {
+      return res.status(400).json({ error: 'Người dùng chưa có dòng họ để xóa.' });
+    }
+
+    // Xóa dòng họ dựa trên _id
+    const dongho = await DongHo.findById(user.lineage);
+    
+    if (dongho) {
+      await DongHo.findByIdAndDelete(user.lineage);
+      user.lineage = '';
+      user.role = 'user'; // Đặt vai trò mặc định là 'user' sau khi xóa dòng họ
+      await user.save();
+
+      res.json({ message: 'Đã xóa dòng họ thành công.' });
+    } else {
+      res.status(404).json({ error: 'Không tìm thấy dòng họ.' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Lỗi hệ thống' });
+  }
+});
 
 
 module.exports = router
